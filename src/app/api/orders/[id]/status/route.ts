@@ -35,9 +35,16 @@ export async function PATCH(
       return NextResponse.json({ success: true, order: data });
     } else {
       // In-memory mock response
+      const { updateMockOrderStatus } = await import('@/lib/mock-data');
+      const updated = updateMockOrderStatus(id, status);
+      
+      if (!updated) {
+        return NextResponse.json({ error: 'Order không tồn tại' }, { status: 404 });
+      }
+
       return NextResponse.json({
         success: true,
-        order: { id, status, updated_at: new Date().toISOString() },
+        order: updated,
       });
     }
   } catch (error) {

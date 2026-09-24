@@ -150,3 +150,39 @@ export const INITIAL_TABLES: RestaurantTable[] = [
   { id: 'tbl-4', table_number: 4, qr_token: 'table-04-token', active: true },
   { id: 'tbl-5', table_number: 5, qr_token: 'table-05-token', active: true },
 ];
+
+// Shared global in-memory store for fallback / dev demo mode
+// Stored on globalThis to persist across Next.js dev route compilations
+const globalForOrders = globalThis as unknown as {
+  mockOrders: import('@/types').Order[];
+  mockOrderIdCounter: number;
+};
+
+if (!globalForOrders.mockOrders) {
+  globalForOrders.mockOrders = [];
+  globalForOrders.mockOrderIdCounter = 1;
+}
+
+export const getMockOrders = () => globalForOrders.mockOrders;
+
+export const addMockOrder = (order: import('@/types').Order) => {
+  globalForOrders.mockOrders.unshift(order);
+};
+
+export const updateMockOrderStatus = (id: string, status: import('@/types').OrderStatus) => {
+  const found = globalForOrders.mockOrders.find((o) => o.id === id);
+  if (found) {
+    found.status = status;
+    found.updated_at = new Date().toISOString();
+    return found;
+  }
+  return null;
+};
+
+export function getNextMockOrderId(): string {
+  if (!globalForOrders.mockOrderIdCounter) {
+    globalForOrders.mockOrderIdCounter = 1;
+  }
+  const idNum = String(globalForOrders.mockOrderIdCounter++).padStart(3, '0');
+  return `ord-${idNum}`;
+}

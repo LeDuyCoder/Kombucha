@@ -124,14 +124,15 @@ export const KitchenDashboard: React.FC = () => {
       );
 
       try {
-        const resp = await fetch(`/api/orders/${orderId}/status`, {
+        const resp = await fetch(`/api/orders/${encodeURIComponent(orderId)}/status`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus }),
         });
 
         if (!resp.ok) {
-          console.error('Status update failed — reverting');
+          const errData = await resp.json().catch(() => ({}));
+          console.error('Status update failed — reverting:', resp.status, errData);
           fetchOrders();
         }
       } catch (err) {

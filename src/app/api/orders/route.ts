@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { INITIAL_MENU_ITEMS, INITIAL_TABLES } from '@/lib/mock-data';
+import {
+  INITIAL_MENU_ITEMS,
+  INITIAL_TABLES,
+  getMockOrders,
+  addMockOrder,
+  getNextMockOrderId,
+} from '@/lib/mock-data';
 import { Order, OrderItem, OrderStatus } from '@/types';
-
-// In-memory store for fallback demo when Supabase is not configured yet
-// This allows immediate testing out of the box!
-const mockOrders: Order[] = [];
-let mockOrderIdCounter = 1;
 
 export async function POST(req: NextRequest) {
   try {
@@ -122,6 +123,7 @@ export async function POST(req: NextRequest) {
       // Fallback in-memory mock mode
       const itemMap = new Map(INITIAL_MENU_ITEMS.map((item) => [item.id, item]));
       let totalAmount = 0;
+      const orderId = getNextMockOrderId();
       const orderItems: OrderItem[] = [];
 
       for (const item of items) {
@@ -132,7 +134,7 @@ export async function POST(req: NextRequest) {
 
         orderItems.push({
           id: `item-${Date.now()}-${Math.random()}`,
-          order_id: `mock-order-${mockOrderIdCounter}`,
+          order_id: orderId,
           menu_item_id: menuItem.id,
           item_name: menuItem.name,
           price: menuItem.price,
@@ -142,7 +144,6 @@ export async function POST(req: NextRequest) {
       }
 
       const table = INITIAL_TABLES.find((t) => t.table_number === Number(tableNumber));
-      const orderId = `order-#${String(mockOrderIdCounter++).padStart(3, '0')}`;
 
       const newOrder: Order = {
         id: orderId,
@@ -157,7 +158,7 @@ export async function POST(req: NextRequest) {
         order_items: orderItems,
       };
 
-      mockOrders.unshift(newOrder);
+      addMockOrder(newOrder);
 
       return NextResponse.json({
         success: true,
@@ -223,7 +224,7 @@ export async function GET(req: NextRequest) {
 
       return NextResponse.json({ orders: formatted });
     } else {
-      let results = [...mockOrders];
+      let results = [...getMockOrders()];
       if (sessionId) {
         results = results.filter((o) => o.session_id === sessionId);
       }
