@@ -66,7 +66,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({
         <div className="p-4 border-b border-stone-100 flex items-center justify-between">
           <div>
             <h2 className="font-bold text-stone-900 text-lg">Đơn hàng của bạn</h2>
-            <p className="text-xs text-stone-500">Bàn {tableNumber || '--'}</p>
+            <p className="text-xs text-stone-500">Phòng {tableNumber || '--'}</p>
           </div>
           <button
             onClick={onClose}

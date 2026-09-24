@@ -41,7 +41,7 @@ export const CustomerHeader: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2">
           {tableNumber !== null && (
             <div className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2.5 py-1 rounded-lg text-xs font-bold tracking-tight">
-              Bàn {String(tableNumber).padStart(2, '0')}
+              Phòng {String(tableNumber).padStart(2, '0')}
             </div>
           )}
 

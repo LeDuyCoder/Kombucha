@@ -14,7 +14,7 @@ export default function HomePage() {
             Kombucha & Tea Order System
           </h1>
           <p className="text-stone-500 text-sm max-w-md mx-auto">
-            Hệ thống đặt món tại bàn bằng QR code và quản lý order realtime cho quầy bar / bếp.
+            Hệ thống đặt món tại phòng bằng QR code và quản lý order realtime cho quầy bar / bếp.
           </p>
         </div>
 
@@ -34,7 +34,7 @@ export default function HomePage() {
                   Trang Khách Đặt Món
                 </h3>
                 <p className="text-xs text-stone-500 mt-1">
-                  Mở menu với tư cách khách hàng ngồi tại Bàn 05.
+                  Mở menu với tư cách khách hàng ngồi tại Phòng 05.
                 </p>
               </div>
             </div>
@@ -79,15 +79,15 @@ export default function HomePage() {
               </div>
               <div>
                 <h3 className="font-bold text-base text-stone-800 group-hover:text-blue-700 transition-colors">
-                  Quản Lý Bàn & Mã QR
+                  Quản Lý Phòng &amp; Mã QR
                 </h3>
                 <p className="text-xs text-stone-500 mt-1">
-                  Xem danh sách bàn, tạo mã QR và in mã đặt lên bàn.
+                  Xem danh sách phòng, tạo mã QR và in mã đặt trong phòng.
                 </p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
-              <span>Xem danh sách bàn</span>
+              <span>Xem danh sách phòng</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </div>
           </Link>
@@ -117,9 +117,9 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Quick Demo Tables */}
+        {/* Quick Demo Rooms */}
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs text-center space-y-2">
-          <p className="text-xs text-stone-500 font-medium">Truy cập nhanh menu từng bàn:</p>
+          <p className="text-xs text-stone-500 font-medium">Truy cập nhanh menu từng phòng:</p>
           <div className="flex justify-center gap-2 flex-wrap">
             {[1, 2, 3, 4, 5].map((t) => (
               <Link
@@ -127,7 +127,7 @@ export default function HomePage() {
                 href={`/order?table=${t}`}
                 className="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700 border border-stone-200 transition-colors"
               >
-                Bàn {String(t).padStart(2, '0')}
+                Phòng {String(t).padStart(2, '0')}
               </Link>
             ))}
           </div>

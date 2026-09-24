@@ -66,7 +66,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </span>
                 </div>
                 <div className="text-left">
-                  <div className="text-xs text-stone-300 font-medium">Bàn {tableNumber || '--'}</div>
+                  <div className="text-xs text-stone-300 font-medium">Phòng {tableNumber || '--'}</div>
                   <div className="font-extrabold text-white text-base">
                     {formatCurrency(totalPrice)}
                   </div>
@@ -97,7 +97,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div>
                   <h2 className="font-bold text-stone-900 text-base">Đơn order món</h2>
-                  <p className="text-xs text-stone-500">Bàn {tableNumber || '--'} • {totalQuantity} món</p>
+                  <p className="text-xs text-stone-500">Phòng {tableNumber || '--'} • {totalQuantity} món</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">

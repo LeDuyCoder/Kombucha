@@ -260,7 +260,7 @@ export const KitchenDashboard: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-stone-500">
             <Filter className="w-4 h-4 text-stone-400" />
-            <span className="text-xs font-bold">Lọc bàn:</span>
+            <span className="text-xs font-bold">Lọc phòng:</span>
           </div>
           <div className="flex gap-1">
             <button
@@ -283,7 +283,7 @@ export const KitchenDashboard: React.FC = () => {
                     : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                 }`}
               >
-                Bàn {t}
+                Phòng {t}
               </button>
             ))}
           </div>

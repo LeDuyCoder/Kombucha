@@ -57,7 +57,7 @@ export default function AdminTablesPage() {
         fetchTables();
       } else {
         const err = await resp.json();
-        alert(err.error || 'Lỗi thêm bàn');
+        alert(err.error || 'Lỗi thêm phòng');
       }
     } catch (err) {
       console.error('Add table error:', err);
@@ -81,10 +81,10 @@ export default function AdminTablesPage() {
             <div>
               <h1 className="text-xl font-black text-stone-900 flex items-center gap-2">
                 <QrCode className="w-5 h-5 text-blue-600" />
-                <span>Quản Lý Bàn &amp; Mã QR</span>
+                <span>Quản Lý Phòng &amp; Mã QR</span>
               </h1>
               <p className="text-xs text-stone-500 font-medium">
-                Tạo mã QR cho từng bàn để khách quét và đặt món
+                Tạo mã QR cho từng phòng để khách quét và đặt món
               </p>
             </div>
           </div>
@@ -98,17 +98,17 @@ export default function AdminTablesPage() {
           </button>
         </div>
 
-        {/* Add Table Form */}
+        {/* Add Table / Room Form */}
         <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-xs">
           <form onSubmit={handleAddTable} className="flex gap-3 items-end">
             <div className="flex-1 max-w-xs">
               <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                Thêm bàn mới
+                Thêm phòng mới
               </label>
               <input
                 type="number"
                 min="1"
-                placeholder="Nhập số bàn (vd: 6)"
+                placeholder="Nhập số phòng (vd: 6)"
                 value={newTableNum}
                 onChange={(e) => setNewTableNum(e.target.value)}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
@@ -120,21 +120,21 @@ export default function AdminTablesPage() {
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 shadow-xs shadow-blue-600/20 transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
-              <span>Thêm bàn</span>
+              <span>Thêm phòng</span>
             </button>
           </form>
         </div>
 
-        {/* Tables Grid */}
+        {/* Tables / Rooms Grid */}
         <div>
           <h2 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
-            Danh Sách Bàn ({tables.length})
+            Danh Sách Phòng ({tables.length})
           </h2>
 
           {loading ? (
-            <div className="text-center py-12 text-stone-400">Đang tải danh sách bàn...</div>
+            <div className="text-center py-12 text-stone-400">Đang tải danh sách phòng...</div>
           ) : tables.length === 0 ? (
-            <div className="text-center py-12 text-stone-400">Chưa có bàn nào trong hệ thống</div>
+            <div className="text-center py-12 text-stone-400">Chưa có phòng nào trong hệ thống</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {tables.map((table) => {
@@ -147,7 +147,7 @@ export default function AdminTablesPage() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-extrabold px-3 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
-                          Bàn {String(table.table_number).padStart(2, '0')}
+                          Phòng {String(table.table_number).padStart(2, '0')}
                         </span>
                         <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -173,7 +173,7 @@ export default function AdminTablesPage() {
                         target="_blank"
                         rel="noreferrer"
                         className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 transition-colors"
-                        title="Mở menu bàn này"
+                        title="Mở menu phòng này"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>

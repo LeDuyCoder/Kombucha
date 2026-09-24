@@ -277,7 +277,7 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
               {report.tableBreakdown.length > 0 && (
                 <div className="border-t border-dashed border-stone-300 pt-3 mb-4">
                   <p className="text-xs font-bold text-stone-800 uppercase tracking-wider mb-2">
-                    Doanh thu theo từng bàn
+                    Doanh thu theo từng phòng
                   </p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {report.tableBreakdown.map((tbl) => (
@@ -285,7 +285,7 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
                         key={tbl.tableNumber}
                         className="p-2 bg-stone-50 rounded-lg flex items-center justify-between border border-stone-100"
                       >
-                        <span className="font-bold text-stone-700">Bàn {tbl.tableNumber}</span>
+                        <span className="font-bold text-stone-700">Phòng {tbl.tableNumber}</span>
                         <div className="text-right">
                           <span className="font-extrabold text-stone-900 block">
                             {formatCurrency(tbl.totalAmount)}

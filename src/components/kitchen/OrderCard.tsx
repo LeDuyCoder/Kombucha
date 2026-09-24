@@ -53,7 +53,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       <div className="px-4 py-2.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/80">
         <div className="flex items-center gap-2">
           <div className="bg-amber-100 text-amber-900 border border-amber-300/80 font-black px-2.5 py-0.5 rounded-lg text-xs tracking-tight">
-            Bàn {order.table_number ? String(order.table_number).padStart(2, '0') : 'N/A'}
+            Phòng {order.table_number ? String(order.table_number).padStart(2, '0') : 'N/A'}
           </div>
           <span className="text-xs text-stone-500 font-mono tracking-wider font-semibold">
             #{order.id.slice(-5).toUpperCase()}

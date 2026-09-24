@@ -36,7 +36,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
 
         <div className="bg-stone-50 rounded-2xl border border-stone-100 p-4 text-left space-y-2 mb-4">
           <div className="flex justify-between text-sm">
-            <span className="text-stone-500">Bàn</span>
+            <span className="text-stone-500">Phòng</span>
             <span className="font-bold text-stone-900">
               {String(tableNumber || 0).padStart(2, '0')}
             </span>
