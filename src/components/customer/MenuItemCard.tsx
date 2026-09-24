@@ -26,25 +26,25 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         isOutOfStock
           ? 'border-stone-200 bg-stone-50/60 opacity-60'
           : quantityInCart > 0
-          ? 'border-emerald-300 ring-1 ring-emerald-400/40 bg-emerald-50/10'
-          : 'border-stone-200 hover:border-emerald-200'
+          ? 'border-blue-300 ring-1 ring-blue-400/40 bg-blue-50/10'
+          : 'border-stone-200 hover:border-blue-200'
       }`}
     >
       {/* Top Part: Item Name & Description */}
       <div>
         <div className="flex items-start justify-between gap-1.5">
-          <h3 className="font-extrabold text-stone-900 text-sm md:text-base leading-tight group-hover:text-emerald-800 transition-colors">
+          <h3 className="font-extrabold text-stone-900 text-sm md:text-base leading-tight group-hover:text-blue-700 transition-colors">
             {item.name}
           </h3>
           {quantityInCart > 0 && (
-            <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center shadow-xs">
+            <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-black flex items-center justify-center shadow-xs">
               {quantityInCart}
             </span>
           )}
         </div>
 
         {item.description && (
-          <p className="text-[11px] md:text-xs text-stone-500 mt-1.5 line-clamp-2 leading-relaxed">
+          <p className="text-[11px] md:text-xs text-stone-500 mt-1.5 line-clamp-2 leading-relaxed font-medium">
             {item.description}
           </p>
         )}
@@ -56,7 +56,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
           <span className="text-[10px] text-stone-400 font-semibold block leading-none mb-0.5">
             Giá tiền
           </span>
-          <span className="font-black text-emerald-700 text-sm md:text-base tracking-tight">
+          <span className="font-black text-blue-700 text-sm md:text-base tracking-tight">
             {formatCurrency(item.price)}
           </span>
         </div>
@@ -80,7 +80,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
             </span>
             <button
               onClick={() => onAddToCart(item)}
-              className="w-7 h-7 rounded-lg bg-emerald-600 text-white shadow-xs flex items-center justify-center active:scale-90 transition-transform"
+              className="w-7 h-7 rounded-lg bg-blue-600 text-white shadow-xs flex items-center justify-center active:scale-90 transition-transform"
               aria-label="Tăng số lượng"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -89,7 +89,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         ) : (
           <button
             onClick={() => onAddToCart(item)}
-            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs shadow-emerald-600/20 active:scale-95 transition-all"
+            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs shadow-blue-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Thêm</span>

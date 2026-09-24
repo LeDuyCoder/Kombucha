@@ -3,14 +3,14 @@ import { Coffee, ChefHat, QrCode, UtensilsCrossed, ArrowRight } from 'lucide-rea
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900 flex flex-col justify-center items-center p-6 selection:bg-emerald-200">
+    <main className="min-h-screen bg-stone-50 text-stone-900 flex flex-col justify-center items-center p-6 selection:bg-blue-200">
       <div className="max-w-xl w-full space-y-8">
         {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex p-3 rounded-2xl bg-emerald-100 text-emerald-600 ring-1 ring-emerald-500/20 shadow-xs">
+          <div className="inline-flex p-3.5 rounded-2xl bg-blue-100 text-blue-600 ring-1 ring-blue-500/20 shadow-xs">
             <Coffee className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-linear-to-r from-emerald-600 via-teal-600 to-amber-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-linear-to-r from-blue-600 via-indigo-600 to-sky-600 bg-clip-text text-transparent">
             Kombucha & Tea Order System
           </h1>
           <p className="text-stone-500 text-sm max-w-md mx-auto">
@@ -23,14 +23,14 @@ export default function HomePage() {
           {/* Customer Order Page */}
           <Link
             href="/order?table=5"
-            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-emerald-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-blue-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <UtensilsCrossed className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-emerald-700 transition-colors">
+                <h3 className="font-bold text-base text-stone-800 group-hover:text-blue-700 transition-colors">
                   Trang Khách Đặt Món
                 </h3>
                 <p className="text-xs text-stone-500 mt-1">
@@ -38,7 +38,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-emerald-600 group-hover:translate-x-1 transition-transform">
+            <div className="mt-4 flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
               <span>Thử đặt món ngay</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </div>
@@ -47,14 +47,14 @@ export default function HomePage() {
           {/* Kitchen Display */}
           <Link
             href="/kitchen"
-            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-amber-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-indigo-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                 <ChefHat className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-amber-700 transition-colors">
+                <h3 className="font-bold text-base text-stone-800 group-hover:text-indigo-700 transition-colors">
                   Màn Hình Bếp (Kitchen)
                 </h3>
                 <p className="text-xs text-stone-500 mt-1">
@@ -62,7 +62,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-amber-600 group-hover:translate-x-1 transition-transform">
+            <div className="mt-4 flex items-center text-xs font-bold text-indigo-600 group-hover:translate-x-1 transition-transform">
               <span>Mở Kitchen Dashboard</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </div>
@@ -95,14 +95,14 @@ export default function HomePage() {
           {/* Menu Management */}
           <Link
             href="/admin/menu"
-            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-purple-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-blue-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
           >
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <Coffee className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-purple-700 transition-colors">
+                <h3 className="font-bold text-base text-stone-800 group-hover:text-blue-700 transition-colors">
                   Quản Lý Menu
                 </h3>
                 <p className="text-xs text-stone-500 mt-1">
@@ -110,7 +110,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-purple-600 group-hover:translate-x-1 transition-transform">
+            <div className="mt-4 flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
               <span>Quản lý món</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </div>
@@ -125,7 +125,7 @@ export default function HomePage() {
               <Link
                 key={t}
                 href={`/order?table=${t}`}
-                className="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-700 border border-stone-200 transition-colors"
+                className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-700 border border-blue-200 transition-colors"
               >
                 Phòng {String(t).padStart(2, '0')}
               </Link>

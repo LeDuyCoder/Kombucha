@@ -59,7 +59,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               className="w-full bg-stone-900 text-white p-3.5 rounded-2xl shadow-xl shadow-stone-900/30 flex items-center justify-between hover:bg-stone-800 active:scale-[0.98] transition-all"
             >
               <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white">
+                <div className="relative w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
                   <ShoppingBag className="w-5 h-5" />
                   <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[11px] font-black w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-stone-900">
                     {totalQuantity}
@@ -73,7 +73,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-emerald-400 font-bold text-sm">
+              <div className="flex items-center gap-1 text-blue-400 font-bold text-sm">
                 <span>Xem giỏ hàng</span>
                 <ArrowRight className="w-4 h-4" />
               </div>
@@ -92,12 +92,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             {/* Header */}
             <div className="p-4 border-b border-stone-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
                   <ShoppingBag className="w-4 h-4" />
                 </div>
                 <div>
                   <h2 className="font-bold text-stone-900 text-base">Đơn order món</h2>
-                  <p className="text-xs text-stone-500">Phòng {tableNumber || '--'} • {totalQuantity} món</p>
+                  <p className="text-xs text-stone-500 font-medium">Phòng {tableNumber || '--'} • {totalQuantity} món</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -138,7 +138,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       <h4 className="font-bold text-stone-800 text-sm truncate">
                         {item.menuItem.name}
                       </h4>
-                      <p className="text-xs text-emerald-700 font-semibold mt-0.5">
+                      <p className="text-xs text-blue-700 font-extrabold mt-0.5">
                         {formatCurrency(item.menuItem.price)}
                       </p>
                     </div>
@@ -156,7 +156,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       </span>
                       <button
                         onClick={() => onAddToCart(item.menuItem)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-emerald-700 hover:bg-emerald-50 active:scale-90"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-blue-700 hover:bg-blue-50 active:scale-90"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -176,7 +176,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     onChange={(e) => setOrderNote(e.target.value)}
                     placeholder="Ví dụ: Ít đá, ít ngọt, không lấy ống hút..."
                     rows={2}
-                    className="w-full text-xs p-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500 transition-all resize-none"
+                    className="w-full text-xs p-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all resize-none"
                   />
                 </div>
               )}
@@ -195,7 +195,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <button
                   onClick={handleOrder}
                   disabled={isSubmitting}
-                  className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-base shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
+                  className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -210,7 +210,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   )}
                 </button>
                 <p className="text-[11px] text-center text-stone-400">
-                  Không cần thanh toán ngay • Nhân viên sẽ phục vụ tại bàn
+                  Không cần thanh toán ngay • Nhân viên sẽ phục vụ tại phòng
                 </p>
               </div>
             )}

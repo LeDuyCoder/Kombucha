@@ -23,15 +23,15 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
   return (
     <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm border-b border-stone-100 shadow-xs">
       <div className="max-w-xl mx-auto overflow-x-auto">
-        <div className="flex gap-1 px-4 py-2 min-w-max">
+        <div className="flex gap-1.5 px-4 py-2 min-w-max">
           {allCategories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => onSelect(cat.id)}
               className={cn(
-                'flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold tracking-tight transition-all duration-200 active:scale-95',
+                'shrink-0 px-4 py-2 rounded-xl text-sm font-bold tracking-tight transition-all duration-200 active:scale-95',
                 activeCategory === cat.id
-                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               )}
             >
