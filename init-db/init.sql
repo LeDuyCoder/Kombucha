@@ -25,6 +25,7 @@ create table if not exists menu_items (
     price integer not null default 0,
     image_url text,
     available boolean default true,
+    stock_quantity integer,
     sort_order integer default 0
 );
 

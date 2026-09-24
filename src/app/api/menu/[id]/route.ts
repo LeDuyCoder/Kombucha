@@ -42,11 +42,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
             name
           )
         `)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Update menu item in Supabase error:', error);
         return NextResponse.json({ error: 'Lỗi cập nhật món: ' + error.message }, { status: 400 });
+      }
+
+      if (!data) {
+        return NextResponse.json({ error: 'Không tìm thấy món cần cập nhật' }, { status: 404 });
       }
 
       const formatted = {
