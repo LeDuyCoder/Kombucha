@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Coffee, Clock, Volume2, VolumeX, Wifi, WifiOff } from 'lucide-react';
+import { Coffee, Clock, Volume2, VolumeX, Wifi, WifiOff, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface KitchenHeaderProps {
@@ -100,6 +100,18 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
           )}
         >
           {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
+
+        {/* Logout button */}
+        <button
+          onClick={async () => {
+            await fetch('/api/kitchen/logout', { method: 'POST' });
+            window.location.href = '/kitchen/login';
+          }}
+          title="Đăng xuất khỏi Bếp"
+          className="p-2.5 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all duration-200 active:scale-95 shadow-xs"
+        >
+          <LogOut className="w-5 h-5" />
         </button>
       </div>
     </header>
