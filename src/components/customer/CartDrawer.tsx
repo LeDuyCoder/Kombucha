@@ -53,7 +53,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       {/* Sticky Bottom Bar (when drawer is closed) */}
       {!isOpen && totalQuantity > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pointer-events-none">
-          <div className="max-w-md mx-auto pointer-events-auto">
+          <div className="max-w-lg mx-auto pointer-events-auto">
             <button
               onClick={onOpen}
               className="w-full bg-stone-900 text-white p-3.5 rounded-2xl shadow-xl shadow-stone-900/30 flex items-center justify-between hover:bg-stone-800 active:scale-[0.98] transition-all"
@@ -86,7 +86,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in">
           <div
-            className="w-full max-w-md bg-white rounded-t-3xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
+            className="w-full max-w-lg bg-white rounded-t-3xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

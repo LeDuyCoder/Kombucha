@@ -22,7 +22,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
 
   return (
     <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm border-b border-stone-100 shadow-xs">
-      <div className="max-w-md mx-auto overflow-x-auto">
+      <div className="max-w-xl mx-auto overflow-x-auto">
         <div className="flex gap-1 px-4 py-2 min-w-max">
           {allCategories.map((cat) => (
             <button

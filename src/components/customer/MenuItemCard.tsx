@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { MenuItem } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { Plus, Minus } from 'lucide-react';
@@ -22,87 +21,80 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
   const isOutOfStock = !item.available;
 
   return (
-    <div className="bg-white rounded-2xl p-3 border border-stone-100 shadow-xs hover:shadow-md transition-all flex gap-3.5 items-center relative overflow-hidden group">
-      {/* Product Image */}
-      <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-stone-100 shrink-0">
-        {item.image_url ? (
-          <Image
-            src={item.image_url}
-            alt={item.name}
-            fill
-            className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
-              isOutOfStock ? 'grayscale opacity-50' : ''
-            }`}
-            sizes="96px"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-800 font-bold text-xs p-2 text-center">
+    <div
+      className={`bg-white rounded-2xl p-4 border transition-all duration-200 flex flex-col justify-between shadow-xs hover:shadow-md relative overflow-hidden group ${
+        isOutOfStock
+          ? 'border-stone-200 bg-stone-50/60 opacity-60'
+          : quantityInCart > 0
+          ? 'border-emerald-300 ring-1 ring-emerald-400/40 bg-emerald-50/10'
+          : 'border-stone-200 hover:border-emerald-200'
+      }`}
+    >
+      {/* Top Part: Item Name & Description */}
+      <div>
+        <div className="flex items-start justify-between gap-1.5">
+          <h3 className="font-extrabold text-stone-900 text-sm md:text-base leading-tight group-hover:text-emerald-800 transition-colors">
             {item.name}
-          </div>
-        )}
-
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="text-white text-[11px] font-semibold px-2 py-0.5 rounded-full bg-stone-900/80">
-              Hết món
+          </h3>
+          {quantityInCart > 0 && (
+            <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center shadow-xs">
+              {quantityInCart}
             </span>
-          </div>
+          )}
+        </div>
+
+        {item.description && (
+          <p className="text-[11px] md:text-xs text-stone-500 mt-1.5 line-clamp-2 leading-relaxed">
+            {item.description}
+          </p>
         )}
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+      {/* Bottom Part: Price & Add / Adjust Buttons */}
+      <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
         <div>
-          <h3 className="font-bold text-stone-900 text-sm md:text-base leading-tight truncate">
-            {item.name}
-          </h3>
-          {item.description && (
-            <p className="text-xs text-stone-500 line-clamp-2 mt-1 leading-relaxed">
-              {item.description}
-            </p>
-          )}
-        </div>
-
-        <div className="mt-2.5 flex items-center justify-between">
-          <span className="font-extrabold text-stone-900 text-sm md:text-base tracking-tight text-emerald-700">
+          <span className="text-[10px] text-stone-400 font-semibold block leading-none mb-0.5">
+            Giá tiền
+          </span>
+          <span className="font-black text-emerald-700 text-sm md:text-base tracking-tight">
             {formatCurrency(item.price)}
           </span>
-
-          {/* Action buttons */}
-          {!isOutOfStock && (
-            <div className="flex items-center">
-              {quantityInCart > 0 ? (
-                <div className="flex items-center bg-stone-100 rounded-xl p-0.5 border border-stone-200">
-                  <button
-                    onClick={() => onRemoveFromCart(item)}
-                    className="w-7 h-7 rounded-lg bg-white shadow-xs flex items-center justify-center text-stone-700 active:scale-90 transition-transform"
-                    aria-label="Giảm"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="w-7 text-center font-bold text-xs text-stone-800">
-                    {quantityInCart}
-                  </span>
-                  <button
-                    onClick={() => onAddToCart(item)}
-                    className="w-7 h-7 rounded-lg bg-emerald-600 text-white shadow-xs flex items-center justify-center active:scale-90 transition-transform"
-                    aria-label="Tăng"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => onAddToCart(item)}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1 shadow-xs hover:bg-emerald-700 active:scale-95 transition-all"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Thêm</span>
-                </button>
-              )}
-            </div>
-          )}
         </div>
+
+        {/* Action Button */}
+        {isOutOfStock ? (
+          <span className="px-2.5 py-1 rounded-xl bg-stone-200 text-stone-500 text-[11px] font-bold">
+            Hết món
+          </span>
+        ) : quantityInCart > 0 ? (
+          <div className="flex items-center bg-stone-100 rounded-xl p-0.5 border border-stone-200">
+            <button
+              onClick={() => onRemoveFromCart(item)}
+              className="w-7 h-7 rounded-lg bg-white shadow-xs flex items-center justify-center text-stone-700 active:scale-90 transition-transform"
+              aria-label="Giảm số lượng"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <span className="w-6 text-center font-bold text-xs text-stone-900">
+              {quantityInCart}
+            </span>
+            <button
+              onClick={() => onAddToCart(item)}
+              className="w-7 h-7 rounded-lg bg-emerald-600 text-white shadow-xs flex items-center justify-center active:scale-90 transition-transform"
+              aria-label="Tăng số lượng"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => onAddToCart(item)}
+            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs shadow-emerald-600/20 active:scale-95 transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Thêm</span>
+          </button>
+        )}
       </div>
     </div>
   );

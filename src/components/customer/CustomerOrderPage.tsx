@@ -307,7 +307,7 @@ export default function CustomerOrderPage() {
 
       {/* Store Closed Alert Banner */}
       {!isStoreOpen && (
-        <div className="max-w-md mx-auto px-4 pt-3">
+        <div className="max-w-xl mx-auto px-4 pt-3">
           <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-3 shadow-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
             <div>
@@ -328,21 +328,23 @@ export default function CustomerOrderPage() {
       />
 
       {/* Menu Items */}
-      <main className="max-w-md mx-auto px-4 pt-4 space-y-3">
+      <main className="max-w-xl mx-auto px-4 pt-4 mb-8">
         {filteredItems.length === 0 ? (
           <div className="text-center py-12 text-stone-400">
             <p className="font-medium text-sm">Không có món nào trong danh mục này</p>
           </div>
         ) : (
-          filteredItems.map((item) => (
-            <MenuItemCard
-              key={item.id}
-              item={item}
-              quantityInCart={cartQuantityMap.get(item.id) || 0}
-              onAddToCart={addToCart}
-              onRemoveFromCart={removeFromCart}
-            />
-          ))
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {filteredItems.map((item) => (
+              <MenuItemCard
+                key={item.id}
+                item={item}
+                quantityInCart={cartQuantityMap.get(item.id) || 0}
+                onAddToCart={addToCart}
+                onRemoveFromCart={removeFromCart}
+              />
+            ))}
+          </div>
         )}
       </main>
 

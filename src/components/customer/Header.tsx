@@ -18,7 +18,7 @@ export const CustomerHeader: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs transition-all">
-      <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="max-w-xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Left: Brand info */}
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white shadow-sm shadow-emerald-700/20">
