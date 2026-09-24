@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!verifyKitchenPin(pin.trim())) {
+      console.warn(`[Kitchen Login] Sai mã PIN. Đã nhận: "${pin}", Mã đúng mặc định: "${process.env.KITCHEN_PIN || '1234'}"`);
       return NextResponse.json({ error: 'Mã PIN không đúng' }, { status: 401 });
     }
 

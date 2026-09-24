@@ -13,7 +13,7 @@ export default function KitchenLoginPage() {
 
   // Handle successful login
   const handleLogin = async (currentPin: string) => {
-    if (currentPin.length === 0) return;
+    if (currentPin.length === 0 || loading) return;
     
     setLoading(true);
     setError('');
@@ -26,14 +26,13 @@ export default function KitchenLoginPage() {
       });
 
       if (resp.ok) {
-        router.push('/kitchen');
-        router.refresh();
+        window.location.href = '/kitchen';
       } else {
         const data = await resp.json();
         setError(data.error || 'Mã PIN không đúng');
         setPin(''); // Reset on error
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối máy chủ');
       setPin('');
     } finally {
@@ -45,8 +44,8 @@ export default function KitchenLoginPage() {
     if (loading) return;
     setError('');
     setPin((prev) => {
+      if (prev.length >= 4) return prev;
       const newPin = prev + num;
-      // Auto-submit if PIN length reaches 4
       if (newPin.length === 4) {
         handleLogin(newPin);
       }
@@ -60,9 +59,29 @@ export default function KitchenLoginPage() {
     setError('');
   };
 
+  // Support physical keyboard typing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        handleKeyPress(e.key);
+      } else if (e.key === 'Backspace') {
+        handleDelete();
+      } else if (e.key === 'Enter') {
+        if (pin.length === 4) {
+          handleLogin(pin);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [loading, pin]);
+
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleLogin(pin);
+    if (pin.length === 4) {
+      handleLogin(pin);
+    }
   };
 
   return (
@@ -107,15 +126,6 @@ export default function KitchenLoginPage() {
             </div>
           )}
 
-          {/* Fallback hidden form for password managers or enter key */}
-          <form onSubmit={handleManualSubmit} className="hidden">
-            <input 
-              type="password" 
-              value={pin} 
-              onChange={(e) => setPin(e.target.value)} 
-              autoFocus 
-            />
-          </form>
 
           {/* Keypad */}
           <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6">
