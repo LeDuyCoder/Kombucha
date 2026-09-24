@@ -7,7 +7,7 @@ import { playOrderChime } from '@/lib/audio';
 import { KitchenHeader } from '@/components/kitchen/KitchenHeader';
 import { KanbanColumn } from '@/components/kitchen/KanbanColumn';
 import { OrderCard } from '@/components/kitchen/OrderCard';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Filter } from 'lucide-react';
 
 export const KitchenDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -15,33 +15,35 @@ export const KitchenDashboard: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [connected, setConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTable, setSelectedTable] = useState<number | 'ALL'>('ALL');
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
   // Track known order IDs to avoid chiming on initial load or duplicates
-  const knownOrderIdsRef = useRef<Set<string>>(new Set());
-  // Ref so realtime callbacks always see the latest muted value
-  const isMutedRef = useRef(isMuted);
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-  }, [isMuted]);
+  const knownOrderIds = useRef<Set<string>>(new Set());
+  const isInitialLoad = useRef(true);
 
-  // ------- Fetch orders from API -------
-  const fetchOrders = useCallback(async (showSpinner = false) => {
-    if (showSpinner) setIsRefreshing(true);
+  // ------- Fetch Orders from API -------
+  const fetchOrders = useCallback(async (showRefreshingState = false) => {
     try {
+      if (showRefreshingState) setIsRefreshing(true);
       const resp = await fetch('/api/orders');
       if (resp.ok) {
         const data = await resp.json();
-        const fetchedOrders: Order[] = data.orders || [];
-        setOrders(fetchedOrders);
-        // Seed knownIds so existing orders don't trigger chime on reconnect
-        knownOrderIdsRef.current = new Set(fetchedOrders.map((o) => o.id));
+        const fetched: Order[] = data.orders || [];
+
+        // Register initial order IDs silently
+        if (isInitialLoad.current) {
+          fetched.forEach((o) => knownOrderIds.current.add(o.id));
+          isInitialLoad.current = false;
+        }
+
+        setOrders(fetched);
       }
     } catch (err) {
-      console.error('Kitchen: failed to fetch orders', err);
+      console.error('Fetch kitchen orders error:', err);
     } finally {
       setLoading(false);
-      if (showSpinner) setIsRefreshing(false);
+      if (showRefreshingState) setIsRefreshing(false);
     }
   }, []);
 
@@ -49,54 +51,45 @@ export const KitchenDashboard: React.FC = () => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // ------- Supabase Realtime Subscription -------
+  // ------- Realtime Subscription via Supabase -------
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      // Fallback: poll every 15s in mock / non-configured mode
+      // Demo/fallback mode: show connected
       setConnected(true);
-      const poll = setInterval(() => fetchOrders(), 15000);
-      return () => clearInterval(poll);
+      return;
     }
 
     const channel = supabase
-      .channel('kitchen-orders-channel')
+      .channel('kitchen-realtime-channel')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders' },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+        },
         async (payload) => {
           const newOrder = payload.new as Order;
 
-          // Skip if we already know this order (e.g. from initial load)
-          if (knownOrderIdsRef.current.has(newOrder.id)) return;
-          knownOrderIdsRef.current.add(newOrder.id);
-
-          // Play chime for new WAITING orders (unless muted)
-          if (newOrder.status === 'WAITING' && !isMutedRef.current) {
-            playOrderChime();
-          }
-
-          // Fetch full order with items & table_number, then merge into state
-          try {
-            const resp = await fetch('/api/orders');
-            if (resp.ok) {
-              const data = await resp.json();
-              const fullList: Order[] = data.orders || [];
-              const fullNewOrder = fullList.find((o) => o.id === newOrder.id);
-              if (fullNewOrder) {
-                setOrders((prev) => {
-                  if (prev.some((o) => o.id === fullNewOrder.id)) return prev;
-                  return [fullNewOrder, ...prev];
-                });
-              }
+          // Only chime if this is a newly seen order and audio isn't muted
+          if (!knownOrderIds.current.has(newOrder.id)) {
+            knownOrderIds.current.add(newOrder.id);
+            if (!isMuted) {
+              playOrderChime();
             }
-          } catch (err) {
-            console.error('Kitchen: failed to enrich INSERT order', err);
           }
+
+          // Refetch to get items joined properly
+          fetchOrders();
         }
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders' },
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+        },
         (payload) => {
           const updated = payload.new as Order;
           setOrders((prev) =>
@@ -115,7 +108,7 @@ export const KitchenDashboard: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, isMuted]);
 
   // ------- Optimistic Status Update -------
   const handleUpdateStatus = useCallback(
@@ -155,6 +148,12 @@ export const KitchenDashboard: React.FC = () => {
     [fetchOrders]
   );
 
+  // Filter orders by table if selected
+  const filteredOrders = useMemo(() => {
+    if (selectedTable === 'ALL') return orders;
+    return orders.filter((o) => o.table_number === selectedTable);
+  }, [orders, selectedTable]);
+
   // ------- Group & sort orders by status -------
   const { waitingOrders, preparingOrders, readyOrders, completedOrders } = useMemo(() => {
     const waiting: Order[] = [];
@@ -162,7 +161,7 @@ export const KitchenDashboard: React.FC = () => {
     const ready: Order[] = [];
     const completed: Order[] = [];
 
-    for (const order of orders) {
+    for (const order of filteredOrders) {
       switch (order.status) {
         case 'WAITING':
           waiting.push(order);
@@ -199,20 +198,20 @@ export const KitchenDashboard: React.FC = () => {
       readyOrders: ready,
       completedOrders: completed.slice(0, 20),
     };
-  }, [orders]);
+  }, [filteredOrders]);
 
   // ------- Loading screen -------
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-950">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-50">
         <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-        <p className="mt-4 text-stone-400 font-medium text-sm">Đang tải dữ liệu bếp…</p>
+        <p className="mt-4 text-stone-600 font-medium text-sm">Đang tải dữ liệu bếp…</p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-stone-950 flex flex-col overflow-hidden text-stone-100 font-sans">
+    <div className="h-screen bg-stone-100 flex flex-col overflow-hidden text-stone-900 font-sans">
       {/* Header */}
       <KitchenHeader
         isMuted={isMuted}
@@ -221,13 +220,40 @@ export const KitchenDashboard: React.FC = () => {
       />
 
       {/* Toolbar */}
-      <div className="flex-none bg-stone-900/80 border-b border-stone-800 px-5 py-2 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-stone-500 uppercase tracking-widest">
-            Dashboard bếp
-          </span>
-          <span className="w-1 h-1 rounded-full bg-stone-700" />
-          <span className="text-xs text-stone-400">
+      <div className="flex-none bg-white border-b border-stone-200 px-5 py-2.5 flex items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-stone-500">
+            <Filter className="w-4 h-4 text-stone-400" />
+            <span className="text-xs font-bold">Lọc bàn:</span>
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setSelectedTable('ALL')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                selectedTable === 'ALL'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              Tất cả
+            </button>
+            {[1, 2, 3, 4, 5].map((t) => (
+              <button
+                key={t}
+                onClick={() => setSelectedTable(t)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  selectedTable === t
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+              >
+                Bàn {t}
+              </button>
+            ))}
+          </div>
+
+          <span className="w-1 h-1 rounded-full bg-stone-300 mx-1" />
+          <span className="text-xs text-stone-500 font-medium">
             {waitingOrders.length + preparingOrders.length + readyOrders.length} đơn đang xử lý
           </span>
         </div>
@@ -236,7 +262,7 @@ export const KitchenDashboard: React.FC = () => {
           onClick={() => fetchOrders(true)}
           disabled={isRefreshing}
           title="Tải lại danh sách"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-semibold transition active:scale-95 border border-stone-700/60"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition active:scale-95 border border-stone-200"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           <span>Làm mới</span>
@@ -244,7 +270,7 @@ export const KitchenDashboard: React.FC = () => {
       </div>
 
       {/* Kanban Board */}
-      <main className="flex-1 flex gap-3 p-3 overflow-hidden min-h-0">
+      <main className="flex-1 flex gap-3 p-3 overflow-x-auto min-h-0">
         {/* Column 1: WAITING */}
         <KanbanColumn
           title="Chờ tiếp nhận"

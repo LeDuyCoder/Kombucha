@@ -3,66 +3,52 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export type KanbanStatusType =
-  | 'waiting'
-  | 'preparing'
-  | 'ready'
-  | 'completed'
-  | 'WAITING'
-  | 'PREPARING'
-  | 'READY'
-  | 'COMPLETED'
-  | string;
+export type ColumnStatusColor = 'waiting' | 'preparing' | 'ready' | 'completed';
 
 interface KanbanColumnProps {
   title: string;
   count: number;
-  statusColor: KanbanStatusType;
+  statusColor: ColumnStatusColor;
   children: React.ReactNode;
 }
 
-const statusThemes: Record<
-  string,
+const colorMap: Record<
+  ColumnStatusColor,
   {
-    bg: string;
+    headerBg: string;
+    badgeBg: string;
+    badgeText: string;
     border: string;
-    badge: string;
-    title: string;
-    dot: string;
-    headerBorder: string;
+    accentDot: string;
   }
 > = {
   waiting: {
-    bg: 'bg-amber-950/20',
-    border: 'border-amber-500/30',
-    badge: 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40',
-    title: 'text-amber-400',
-    dot: 'bg-amber-400',
-    headerBorder: 'border-amber-500/20',
+    headerBg: 'bg-amber-50/80 border-b border-amber-200',
+    badgeBg: 'bg-amber-100 border border-amber-300',
+    badgeText: 'text-amber-800',
+    border: 'border-amber-200',
+    accentDot: 'bg-amber-500',
   },
   preparing: {
-    bg: 'bg-blue-950/20',
-    border: 'border-blue-500/30',
-    badge: 'bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/40',
-    title: 'text-blue-400',
-    dot: 'bg-blue-400',
-    headerBorder: 'border-blue-500/20',
+    headerBg: 'bg-blue-50/80 border-b border-blue-200',
+    badgeBg: 'bg-blue-100 border border-blue-300',
+    badgeText: 'text-blue-800',
+    border: 'border-blue-200',
+    accentDot: 'bg-blue-500',
   },
   ready: {
-    bg: 'bg-emerald-950/20',
-    border: 'border-emerald-500/30',
-    badge: 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40',
-    title: 'text-emerald-400',
-    dot: 'bg-emerald-400',
-    headerBorder: 'border-emerald-500/20',
+    headerBg: 'bg-emerald-50/80 border-b border-emerald-200',
+    badgeBg: 'bg-emerald-100 border border-emerald-300',
+    badgeText: 'text-emerald-800',
+    border: 'border-emerald-200',
+    accentDot: 'bg-emerald-500',
   },
   completed: {
-    bg: 'bg-stone-900/30',
-    border: 'border-stone-700/40',
-    badge: 'bg-stone-700/50 text-stone-300 ring-1 ring-stone-600/40',
-    title: 'text-stone-300',
-    dot: 'bg-stone-400',
-    headerBorder: 'border-stone-750/30',
+    headerBg: 'bg-stone-100/80 border-b border-stone-200',
+    badgeBg: 'bg-stone-200 border border-stone-300',
+    badgeText: 'text-stone-700',
+    border: 'border-stone-200',
+    accentDot: 'bg-stone-400',
   },
 };
 
@@ -72,57 +58,37 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   statusColor,
   children,
 }) => {
-  const normalizedKey = statusColor.toLowerCase();
-  const theme = statusThemes[normalizedKey] || statusThemes['completed'];
+  const styles = colorMap[statusColor];
 
   return (
     <div
       className={cn(
-        'flex-1 min-w-[280px] lg:min-w-0 flex flex-col rounded-2xl border backdrop-blur-xs overflow-hidden',
-        theme.bg,
-        theme.border
+        'flex-1 flex flex-col min-w-[280px] max-w-sm rounded-2xl bg-white border shadow-xs overflow-hidden transition-all',
+        styles.border
       )}
     >
       {/* Column Header */}
-      <div
-        className={cn(
-          'flex-none flex items-center justify-between px-4 py-3.5 border-b bg-stone-900/60',
-          theme.headerBorder
-        )}
-      >
-        <div className="flex items-center gap-2.5">
-          <span
-            className={cn(
-              'w-2.5 h-2.5 rounded-full',
-              theme.dot,
-              normalizedKey === 'waiting' && count > 0 && 'animate-pulse'
-            )}
-          />
-          <h2
-            className={cn(
-              'font-bold text-sm tracking-wide uppercase',
-              theme.title
-            )}
-          >
-            {title}
-          </h2>
+      <div className={cn('px-4 py-3 flex items-center justify-between', styles.headerBg)}>
+        <div className="flex items-center gap-2">
+          <span className={cn('w-2.5 h-2.5 rounded-full animate-pulse', styles.accentDot)} />
+          <h2 className="font-bold text-stone-900 text-sm tracking-tight">{title}</h2>
         </div>
-
         <span
           className={cn(
-            'text-xs font-bold px-2.5 py-0.5 rounded-full',
-            theme.badge
+            'px-2.5 py-0.5 rounded-full text-xs font-black',
+            styles.badgeBg,
+            styles.badgeText
           )}
         >
           {count}
         </span>
       </div>
 
-      {/* Column Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0 custom-scrollbar">
-        {count === 0 ? (
-          <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-stone-600 text-xs italic">
-            <span>Không có đơn nào</span>
+      {/* Column Scrollable Body */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-stone-50/50">
+        {React.Children.count(children) === 0 ? (
+          <div className="h-40 flex items-center justify-center text-stone-400 text-xs italic">
+            Chưa có đơn hàng
           </div>
         ) : (
           children

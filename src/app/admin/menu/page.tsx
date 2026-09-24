@@ -61,23 +61,23 @@ export default function AdminMenuPage() {
       : items.filter((i) => i.category_id === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-stone-900 text-stone-100 p-6">
+    <div className="min-h-screen bg-stone-50 text-stone-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+        <div className="flex items-center justify-between border-b border-stone-200 pb-4">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors"
+              className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-xl font-black text-white flex items-center gap-2">
-                <Coffee className="w-5 h-5 text-purple-400" />
+              <h1 className="text-xl font-black text-stone-900 flex items-center gap-2">
+                <Coffee className="w-5 h-5 text-purple-600" />
                 <span>Quản Lý Menu Món</span>
               </h1>
-              <p className="text-xs text-stone-400">
+              <p className="text-xs text-stone-500 font-medium">
                 Bật/tắt trạng thái Còn món hoặc Hết món tức thì
               </p>
             </div>
@@ -85,7 +85,7 @@ export default function AdminMenuPage() {
 
           <button
             onClick={fetchMenu}
-            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors text-xs flex items-center gap-1.5"
+            className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors text-xs font-bold flex items-center gap-1.5"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Làm mới</span>
@@ -93,13 +93,13 @@ export default function AdminMenuPage() {
         </div>
 
         {/* Filter categories */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           <button
             onClick={() => setSelectedCategory('ALL')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               selectedCategory === 'ALL'
-                ? 'bg-purple-600 text-white'
-                : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
+                ? 'bg-purple-600 text-white shadow-xs shadow-purple-600/20'
+                : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
             }`}
           >
             Tất cả ({items.length})
@@ -108,10 +108,10 @@ export default function AdminMenuPage() {
             <button
               key={c.id}
               onClick={() => setSelectedCategory(c.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 selectedCategory === c.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
+                  ? 'bg-purple-600 text-white shadow-xs shadow-purple-600/20'
+                  : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
               }`}
             >
               {c.name}
@@ -120,41 +120,41 @@ export default function AdminMenuPage() {
         </div>
 
         {/* Menu Items Table / List */}
-        <div className="bg-stone-800/80 border border-stone-700 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-xs">
           {loading ? (
-            <div className="text-center py-12 text-stone-500">Đang tải danh sách món...</div>
+            <div className="text-center py-12 text-stone-400">Đang tải danh sách món...</div>
           ) : filteredItems.length === 0 ? (
-            <div className="text-center py-12 text-stone-500">Không có món nào</div>
+            <div className="text-center py-12 text-stone-400">Không có món nào</div>
           ) : (
-            <div className="divide-y divide-stone-700">
+            <div className="divide-y divide-stone-100">
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className="p-4 flex items-center justify-between hover:bg-stone-800 transition-colors"
+                  className="p-4 flex items-center justify-between hover:bg-stone-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-3 h-3 rounded-full ${
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                         item.available ? 'bg-emerald-500' : 'bg-rose-500'
                       }`}
                     />
                     <div>
-                      <h3 className="font-bold text-sm text-white">{item.name}</h3>
+                      <h3 className="font-bold text-sm text-stone-900">{item.name}</h3>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs font-semibold text-purple-400">
+                        <span className="text-xs font-extrabold text-emerald-700">
                           {formatCurrency(item.price)}
                         </span>
-                        <span className="text-xs text-stone-400">• {item.category_name}</span>
+                        <span className="text-xs text-stone-400 font-medium">• {item.category_name}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <span
-                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                         item.available
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200'
                       }`}
                     >
                       {item.available ? 'Còn món' : 'Hết món'}
@@ -162,10 +162,10 @@ export default function AdminMenuPage() {
 
                     <button
                       onClick={() => toggleAvailability(item)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs active:scale-95 ${
                         item.available
-                          ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
                       }`}
                     >
                       {item.available ? (

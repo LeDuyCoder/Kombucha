@@ -67,23 +67,23 @@ export default function AdminTablesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-900 text-stone-100 p-6">
+    <div className="min-h-screen bg-stone-50 text-stone-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+        <div className="flex items-center justify-between border-b border-stone-200 pb-4">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors"
+              className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-xl font-black text-white flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-blue-400" />
+              <h1 className="text-xl font-black text-stone-900 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-blue-600" />
                 <span>Quản Lý Bàn &amp; Mã QR</span>
               </h1>
-              <p className="text-xs text-stone-400">
+              <p className="text-xs text-stone-500 font-medium">
                 Tạo mã QR cho từng bàn để khách quét và đặt món
               </p>
             </div>
@@ -91,7 +91,7 @@ export default function AdminTablesPage() {
 
           <button
             onClick={fetchTables}
-            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors text-xs flex items-center gap-1.5"
+            className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors text-xs font-bold flex items-center gap-1.5"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Làm mới</span>
@@ -99,10 +99,10 @@ export default function AdminTablesPage() {
         </div>
 
         {/* Add Table Form */}
-        <div className="bg-stone-800/80 border border-stone-700 rounded-2xl p-4">
+        <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-xs">
           <form onSubmit={handleAddTable} className="flex gap-3 items-end">
             <div className="flex-1 max-w-xs">
-              <label className="block text-xs font-semibold text-stone-300 mb-1">
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 Thêm bàn mới
               </label>
               <input
@@ -111,13 +111,13 @@ export default function AdminTablesPage() {
                 placeholder="Nhập số bàn (vd: 6)"
                 value={newTableNum}
                 onChange={(e) => setNewTableNum(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
             <button
               type="submit"
               disabled={isAdding || !newTableNum}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 transition-all"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 shadow-xs shadow-blue-600/20 transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Thêm bàn</span>
@@ -127,14 +127,14 @@ export default function AdminTablesPage() {
 
         {/* Tables Grid */}
         <div>
-          <h2 className="text-sm font-bold text-stone-400 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">
             Danh Sách Bàn ({tables.length})
           </h2>
 
           {loading ? (
-            <div className="text-center py-12 text-stone-500">Đang tải danh sách bàn...</div>
+            <div className="text-center py-12 text-stone-400">Đang tải danh sách bàn...</div>
           ) : tables.length === 0 ? (
-            <div className="text-center py-12 text-stone-500">Chưa có bàn nào trong hệ thống</div>
+            <div className="text-center py-12 text-stone-400">Chưa có bàn nào trong hệ thống</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {tables.map((table) => {
@@ -142,24 +142,27 @@ export default function AdminTablesPage() {
                 return (
                   <div
                     key={table.id || table.table_number}
-                    className="bg-stone-800/60 border border-stone-700/80 rounded-2xl p-5 hover:border-blue-500/50 transition-all flex flex-col justify-between"
+                    className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between shadow-xs"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                        <span className="text-xs font-extrabold px-3 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
                           Bàn {String(table.table_number).padStart(2, '0')}
                         </span>
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" title="Hoạt động" />
+                        <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          Hoạt động
+                        </span>
                       </div>
-                      <p className="text-xs text-stone-400 truncate mb-4" title={qrUrl}>
+                      <p className="text-xs text-stone-400 truncate mb-4 font-mono" title={qrUrl}>
                         {qrUrl}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-2 border-t border-stone-700/50">
+                    <div className="flex items-center gap-2 pt-3 border-t border-stone-100">
                       <button
                         onClick={() => setSelectedTable(table)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                        className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs shadow-blue-600/20 transition-all active:scale-95"
                       >
                         <QrCode className="w-3.5 h-3.5" />
                         <span>Mã QR &amp; In</span>
@@ -169,7 +172,7 @@ export default function AdminTablesPage() {
                         href={qrUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-2 rounded-xl bg-stone-700 hover:bg-stone-600 text-stone-300 transition-colors"
+                        className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 transition-colors"
                         title="Mở menu bàn này"
                       >
                         <ExternalLink className="w-4 h-4" />
