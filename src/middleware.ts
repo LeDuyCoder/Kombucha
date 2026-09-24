@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyKitchenSession, COOKIE_NAME } from '@/lib/auth';
+import { verifyKitchenSession, verifyPortalSession, COOKIE_NAME, PORTAL_COOKIE_NAME } from '@/lib/auth';
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
@@ -21,7 +21,6 @@ export async function middleware(req: NextRequest) {
 
     const isValid = await verifyKitchenSession(token);
     if (!isValid) {
-      // Token exists but invalid/expired, redirect to login
       url.pathname = '/kitchen/login';
       const response = NextResponse.redirect(url);
       response.cookies.delete(COOKIE_NAME);
@@ -29,10 +28,29 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // Protect /admin path
+  if (url.pathname.startsWith('/admin')) {
+    const portalToken = req.cookies.get(PORTAL_COOKIE_NAME)?.value;
+
+    if (!portalToken) {
+      url.pathname = '/';
+      url.searchParams.set('redirect', req.nextUrl.pathname);
+      return NextResponse.redirect(url);
+    }
+
+    const isValid = await verifyPortalSession(portalToken);
+    if (!isValid) {
+      url.pathname = '/';
+      url.searchParams.set('redirect', req.nextUrl.pathname);
+      const response = NextResponse.redirect(url);
+      response.cookies.delete(PORTAL_COOKIE_NAME);
+      return response;
+    }
+  }
+
   return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
-  matcher: ['/kitchen/:path*', '/kitchen'],
+  matcher: ['/kitchen/:path*', '/kitchen', '/admin/:path*'],
 };

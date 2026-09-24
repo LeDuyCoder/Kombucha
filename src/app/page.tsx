@@ -1,9 +1,33 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { Coffee, ChefHat, QrCode, UtensilsCrossed, ArrowRight } from 'lucide-react';
+import { verifyPortalSession, PORTAL_COOKIE_NAME } from '@/lib/auth';
+import { PortalLockGate } from '@/components/auth/PortalLockGate';
+import { PortalLogoutButton } from '@/components/dashboard/PortalLogoutButton';
 
-export default function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<{ redirect?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const resolvedSearchParams = await searchParams;
+  const cookieStore = await cookies();
+  const token = cookieStore.get(PORTAL_COOKIE_NAME)?.value;
+  const isAuthorized = token ? await verifyPortalSession(token) : false;
+
+  // If not authenticated, show the Password Layer before entering this page
+  if (!isAuthorized) {
+    return <PortalLockGate redirectUrl={resolvedSearchParams?.redirect} />;
+  }
+
+  // Once authenticated, show the full hub dashboard
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900 flex flex-col justify-center items-center p-6 selection:bg-blue-200">
+    <main className="min-h-screen bg-stone-50 text-stone-900 flex flex-col justify-center items-center p-6 selection:bg-blue-200 relative">
+      {/* Top action bar: Logout / Lock */}
+      <div className="absolute top-6 right-6">
+        <PortalLogoutButton />
+      </div>
+
       <div className="max-w-xl w-full space-y-8">
         {/* Brand Header */}
         <div className="text-center space-y-3">
@@ -11,7 +35,7 @@ export default function HomePage() {
             <Coffee className="w-8 h-8" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-linear-to-r from-blue-600 via-indigo-600 to-sky-600 bg-clip-text text-transparent">
-            Kombucha & Tea Order System
+            Kombucha &amp; Tea Order System
           </h1>
           <p className="text-stone-500 text-sm max-w-md mx-auto">
             Hệ thống đặt món tại phòng bằng QR code và quản lý order realtime cho quầy bar / bếp.
