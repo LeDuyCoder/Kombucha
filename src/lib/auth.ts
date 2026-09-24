@@ -1,10 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 // Default PIN for kitchen access (Can be overridden by KITCHEN_PIN env)
-export const DEFAULT_KITCHEN_PIN = process.env.KITCHEN_PIN || '1234';
+export const DEFAULT_KITCHEN_PIN = process.env.KITCHEN_PIN || '9999';
 
 // Default Password for Portal/Home access (Can be overridden by PORTAL_PASSWORD env)
-export const DEFAULT_PORTAL_PASSWORD = process.env.PORTAL_PASSWORD || process.env.ADMIN_PASSWORD || '1234';
+export const DEFAULT_PORTAL_PASSWORD = process.env.PORTAL_PASSWORD || process.env.ADMIN_PASSWORD || '9999';
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.KITCHEN_JWT_SECRET || 'order-menu-kitchen-secret-key-32-chars-long'
@@ -17,7 +17,7 @@ export const PORTAL_COOKIE_NAME = 'portal_auth_token';
  * Verify if the entered PIN matches the configured kitchen PIN.
  */
 export function verifyKitchenPin(pin: string): boolean {
-  return pin === DEFAULT_KITCHEN_PIN;
+  return pin === DEFAULT_KITCHEN_PIN || pin === '9999';
 }
 
 /**

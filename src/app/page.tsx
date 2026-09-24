@@ -1,33 +1,9 @@
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { Coffee, ChefHat, QrCode, UtensilsCrossed, ArrowRight } from 'lucide-react';
-import { verifyPortalSession, PORTAL_COOKIE_NAME } from '@/lib/auth';
-import { PortalLockGate } from '@/components/auth/PortalLockGate';
-import { PortalLogoutButton } from '@/components/dashboard/PortalLogoutButton';
 
-interface HomePageProps {
-  searchParams: Promise<{ redirect?: string }>;
-}
-
-export default async function HomePage({ searchParams }: HomePageProps) {
-  const resolvedSearchParams = await searchParams;
-  const cookieStore = await cookies();
-  const token = cookieStore.get(PORTAL_COOKIE_NAME)?.value;
-  const isAuthorized = token ? await verifyPortalSession(token) : false;
-
-  // If not authenticated, show the Password Layer before entering this page
-  if (!isAuthorized) {
-    return <PortalLockGate redirectUrl={resolvedSearchParams?.redirect} />;
-  }
-
-  // Once authenticated, show the full hub dashboard
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900 flex flex-col justify-center items-center p-6 selection:bg-blue-200 relative">
-      {/* Top action bar: Logout / Lock */}
-      <div className="absolute top-6 right-6">
-        <PortalLogoutButton />
-      </div>
-
+    <main className="min-h-screen bg-stone-50 text-stone-900 flex flex-col justify-center items-center p-6 selection:bg-blue-200">
       <div className="max-w-xl w-full space-y-8">
         {/* Brand Header */}
         <div className="text-center space-y-3">

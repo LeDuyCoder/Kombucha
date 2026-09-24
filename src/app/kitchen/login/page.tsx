@@ -182,7 +182,7 @@ export default function KitchenLoginPage() {
         </div>
 
         <div className="mt-8 text-center text-xs font-semibold text-stone-400">
-          <p>Mặc định PIN: 1234</p>
+          <p>Mặc định PIN: 9999</p>
         </div>
       </div>
     </div>
