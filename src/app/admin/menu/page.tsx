@@ -19,7 +19,8 @@ import {
   Loader2,
   Image as ImageIcon,
   CheckCircle2,
-  DollarSign
+  DollarSign,
+  Minus
 } from 'lucide-react';
 
 export default function AdminMenuPage() {
@@ -37,6 +38,8 @@ export default function AdminMenuPage() {
   const [addDescription, setAddDescription] = useState('');
   const [addImageUrl, setAddImageUrl] = useState('');
   const [addAvailable, setAddAvailable] = useState(true);
+  const [addIsUnlimitedStock, setAddIsUnlimitedStock] = useState(true);
+  const [addStockQuantity, setAddStockQuantity] = useState('');
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState('');
 
@@ -48,6 +51,8 @@ export default function AdminMenuPage() {
   const [editDescription, setEditDescription] = useState('');
   const [editImageUrl, setEditImageUrl] = useState('');
   const [editAvailable, setEditAvailable] = useState(true);
+  const [editIsUnlimitedStock, setEditIsUnlimitedStock] = useState(true);
+  const [editStockQuantity, setEditStockQuantity] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -80,18 +85,23 @@ export default function AdminMenuPage() {
 
   // Quick Toggle Availability
   const toggleAvailability = async (item: MenuItem) => {
-    const newStatus = !item.available;
+    let newStatus = !item.available;
+    let newStock = item.stock_quantity;
+    
+    // If toggling on, and stock was 0, default it to 10
+    if (newStatus && newStock === 0) {
+      newStock = 10;
+    }
 
-    // Optimistic update
     setItems((prev) =>
-      prev.map((i) => (i.id === item.id ? { ...i, available: newStatus } : i))
+      prev.map((i) => (i.id === item.id ? { ...i, available: newStatus, stock_quantity: newStock } : i))
     );
 
     try {
       const resp = await fetch(`/api/menu/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ available: newStatus }),
+        body: JSON.stringify({ available: newStatus, stock_quantity: newStock }),
       });
 
       if (!resp.ok) {
@@ -100,6 +110,66 @@ export default function AdminMenuPage() {
     } catch (err) {
       console.error('Toggle availability error:', err);
       fetchMenu();
+    }
+  };
+
+  const adjustStock = async (item: MenuItem, delta: number) => {
+    const current = item.stock_quantity ?? 0;
+    const nextStock = Math.max(0, current + delta);
+    const nextAvailable = nextStock > 0;
+
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, stock_quantity: nextStock, available: nextAvailable } : i
+      )
+    );
+
+    try {
+      await fetch(`/api/menu/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock_quantity: nextStock, available: nextAvailable }),
+      });
+    } catch {
+      fetchMenu();
+    }
+  };
+
+  const setStockDirect = async (item: MenuItem, newStock: number | null) => {
+    const nextAvailable = newStock === null ? true : newStock > 0;
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, stock_quantity: newStock, available: nextAvailable } : i
+      )
+    );
+
+    try {
+      await fetch(`/api/menu/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock_quantity: newStock, available: nextAvailable }),
+      });
+    } catch {
+      fetchMenu();
+    }
+  };
+
+  const handlePromptSetStock = (item: MenuItem) => {
+    const current = item.stock_quantity !== null && item.stock_quantity !== undefined ? item.stock_quantity : '';
+    const input = window.prompt(
+      `Nhập số lượng tồn kho còn lại cho món "${item.name}" (hoặc để trống để đặt Vô hạn):`,
+      String(current)
+    );
+    if (input === null) return;
+    if (input.trim() === '') {
+      setStockDirect(item, null);
+    } else {
+      const num = Number(input.trim());
+      if (!isNaN(num) && num >= 0) {
+        setStockDirect(item, Math.floor(num));
+      } else {
+        alert('Số lượng không hợp lệ');
+      }
     }
   };
 
@@ -131,6 +201,7 @@ export default function AdminMenuPage() {
           description: addDescription.trim() || null,
           image_url: addImageUrl.trim() || null,
           available: addAvailable,
+          stock_quantity: addIsUnlimitedStock ? null : Number(addStockQuantity) || 0,
         }),
       });
 
@@ -142,6 +213,8 @@ export default function AdminMenuPage() {
         setAddDescription('');
         setAddImageUrl('');
         setAddAvailable(true);
+        setAddIsUnlimitedStock(true);
+        setAddStockQuantity('');
         await fetchMenu();
       } else {
         setAddError(res.error || 'Lỗi thêm món mới');
@@ -162,6 +235,14 @@ export default function AdminMenuPage() {
     setEditDescription(item.description || '');
     setEditImageUrl(item.image_url || '');
     setEditAvailable(item.available);
+    
+    if (item.stock_quantity === null || item.stock_quantity === undefined) {
+      setEditIsUnlimitedStock(true);
+      setEditStockQuantity('');
+    } else {
+      setEditIsUnlimitedStock(false);
+      setEditStockQuantity(String(item.stock_quantity));
+    }
     setEditError('');
   };
 
@@ -194,6 +275,7 @@ export default function AdminMenuPage() {
           description: editDescription.trim() || null,
           image_url: editImageUrl.trim() || null,
           available: editAvailable,
+          stock_quantity: editIsUnlimitedStock ? null : Number(editStockQuantity) || 0,
         }),
       });
 
@@ -247,24 +329,36 @@ export default function AdminMenuPage() {
   const unavailableCount = items.length - availableCount;
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 p-6 selection:bg-purple-100">
+    <div className="min-h-screen bg-stone-50 text-stone-900 p-6 selection:bg-rose-100">
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+          <div className="flex items-center gap-3.5">
             <Link
               href="/"
-              className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors"
+              className="p-2.5 rounded-2xl bg-white hover:bg-stone-100 text-stone-600 border border-stone-200/80 shadow-xs hover:shadow-sm transition-all active:scale-95 shrink-0"
+              title="Quay lại trang chủ"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
+
+            <div className="w-12 h-12 rounded-2xl overflow-hidden ring-1 ring-stone-200 shadow-xs shrink-0 relative bg-white p-0.5">
+              <div className="w-full h-full rounded-[12px] overflow-hidden relative">
+                <Image src="/logo.jpg" alt="Logo" fill className="object-cover" priority />
+              </div>
+            </div>
+
             <div>
-              <h1 className="text-xl font-black text-stone-900 flex items-center gap-2">
-                <Coffee className="w-5 h-5 text-purple-600" />
-                <span>Quản Lý Menu Món</span>
-              </h1>
-              <p className="text-xs text-stone-500 font-medium">
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight leading-tight">
+                  Quản Lý Thực Đơn
+                </h1>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200/60 hidden xs:inline-block">
+                  Menu Admin
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 font-medium mt-0.5">
                 Thêm món mới, chỉnh sửa thông tin, giá bán và trạng thái còn/hết
               </p>
             </div>
@@ -274,9 +368,10 @@ export default function AdminMenuPage() {
             <button
               onClick={fetchMenu}
               disabled={loading}
-              className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors text-xs font-bold flex items-center gap-1.5"
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-xs transition-colors text-xs font-bold flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+              title="Tải lại dữ liệu"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-rose-600' : ''}`} />
               <span className="hidden sm:inline">Làm mới</span>
             </button>
 
@@ -285,7 +380,7 @@ export default function AdminMenuPage() {
                 setAddError('');
                 setIsAddOpen(true);
               }}
-              className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm shadow-purple-600/20 transition-all"
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm shadow-rose-200 transition-all"
             >
               <Plus className="w-4 h-4" />
               <span>Thêm món mới</span>
@@ -323,7 +418,7 @@ export default function AdminMenuPage() {
               onClick={() => setSelectedCategory('ALL')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
                 selectedCategory === 'ALL'
-                  ? 'bg-purple-600 text-white shadow-xs shadow-purple-600/20'
+                  ? 'bg-rose-600 text-white shadow-xs shadow-rose-600/20'
                   : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
               }`}
             >
@@ -335,7 +430,7 @@ export default function AdminMenuPage() {
                 onClick={() => setSelectedCategory(c.id)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   selectedCategory === c.id
-                    ? 'bg-purple-600 text-white shadow-xs shadow-purple-600/20'
+                    ? 'bg-rose-600 text-white shadow-xs shadow-rose-600/20'
                     : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
                 }`}
               >
@@ -352,7 +447,7 @@ export default function AdminMenuPage() {
               placeholder="Tìm kiếm món nước..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-stone-900 focus:outline-hidden focus:ring-2 focus:ring-purple-500 transition-all"
+              className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-stone-900 focus:outline-hidden focus:ring-2 focus:ring-rose-500 transition-all"
             />
           </div>
         </div>
@@ -361,7 +456,7 @@ export default function AdminMenuPage() {
         <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-xs">
           {loading ? (
             <div className="text-center py-16 text-stone-400 flex flex-col items-center gap-2">
-              <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+              <Loader2 className="w-6 h-6 animate-spin text-rose-600" />
               <p className="text-sm font-medium">Đang tải danh sách món...</p>
             </div>
           ) : filteredItems.length === 0 ? (
@@ -369,7 +464,7 @@ export default function AdminMenuPage() {
               <p className="text-sm font-medium">Không tìm thấy món nào</p>
               <button
                 onClick={() => setIsAddOpen(true)}
-                className="px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5"
+                className="px-4 py-2 bg-rose-600 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>Thêm món đầu tiên</span>
@@ -415,20 +510,68 @@ export default function AdminMenuPage() {
                         </p>
                       )}
 
-                      <div className="text-sm font-black text-purple-700 mt-1">
+                      <div className="text-sm font-black text-rose-700 mt-1">
                         {formatCurrency(item.price)}
                       </div>
                     </div>
                   </div>
 
                   {/* Right: Actions */}
-                  <div className="flex items-center gap-2 self-end sm:self-center">
+                  <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+                    
+                    {/* Stock Controller */}
+                    <div className="flex items-center gap-1.5 bg-stone-50 p-1 rounded-xl border border-stone-200">
+                      {item.stock_quantity !== null && item.stock_quantity !== undefined ? (
+                        <>
+                          <button
+                            onClick={() => adjustStock(item, -1)}
+                            className="w-6 h-6 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 flex items-center justify-center text-stone-600 active:scale-90 transition-transform font-bold text-xs"
+                            title="Giảm 1 phần"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          
+                          <button
+                            onClick={() => handlePromptSetStock(item)}
+                            className={`px-2 py-0.5 rounded-md text-xs font-bold font-mono hover:bg-white transition-colors ${
+                              item.stock_quantity === 0
+                                ? 'text-rose-600 bg-rose-50'
+                                : item.stock_quantity <= 5
+                                ? 'text-amber-600 bg-amber-50'
+                                : 'text-stone-700'
+                            }`}
+                            title="Bấm để chỉnh số lượng chính xác"
+                          >
+                            <span>Còn: <strong>{item.stock_quantity}</strong></span>
+                          </button>
+
+                          <button
+                            onClick={() => adjustStock(item, 1)}
+                            className="w-6 h-6 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 flex items-center justify-center text-stone-600 active:scale-90 transition-transform font-bold text-xs"
+                            title="Tăng 1 phần"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handlePromptSetStock(item)}
+                          className="px-2.5 py-1 text-xs font-medium text-stone-500 hover:text-rose-600 hover:bg-white rounded-lg transition-colors flex items-center gap-1"
+                          title="Bấm để đặt giới hạn số lượng"
+                        >
+                          <span className="text-[11px] font-bold text-stone-400">Kho:</span>
+                          <span className="font-bold text-emerald-600">Vô hạn</span>
+                          <span className="text-[10px] text-stone-400 underline ml-0.5">Sửa</span>
+                        </button>
+                      )}
+                    </div>
+
                     {/* Status Badge */}
                     <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      className={`text-xs font-bold px-2.5 py-1 rounded-xl border ${
                         item.available
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
                       }`}
                     >
                       {item.available ? 'Còn món' : 'Hết món'}
@@ -492,7 +635,7 @@ export default function AdminMenuPage() {
               </button>
 
               <div className="flex items-center gap-3 mb-5">
-                <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-600">
+                <div className="p-2.5 rounded-2xl bg-rose-50 text-rose-600">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
@@ -518,7 +661,7 @@ export default function AdminMenuPage() {
                     value={addName}
                     onChange={(e) => setAddName(e.target.value)}
                     autoFocus
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
 
@@ -534,7 +677,7 @@ export default function AdminMenuPage() {
                       placeholder="vd: 35000"
                       value={addPrice}
                       onChange={(e) => setAddPrice(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 font-mono"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
                     />
                   </div>
 
@@ -545,7 +688,7 @@ export default function AdminMenuPage() {
                     <select
                       value={addCategoryId}
                       onChange={(e) => setAddCategoryId(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
                     >
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -565,7 +708,7 @@ export default function AdminMenuPage() {
                     placeholder="Mô tả hương vị, nguyên liệu..."
                     value={addDescription}
                     onChange={(e) => setAddDescription(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
 
@@ -578,8 +721,51 @@ export default function AdminMenuPage() {
                     placeholder="https://images.unsplash.com/..."
                     value={addImageUrl}
                     onChange={(e) => setAddImageUrl(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 font-mono"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
                   />
+                </div>
+
+                {/* Stock Quantity Control in Add Modal */}
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-stone-800 block">Quản lý số lượng còn lại</span>
+                      <span className="text-[11px] text-stone-500 font-medium">Bật nếu muốn giới hạn số phần có thể bán</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!addIsUnlimitedStock}
+                        onChange={(e) => {
+                          const hasLimit = e.target.checked;
+                          setAddIsUnlimitedStock(!hasLimit);
+                          if (hasLimit && !addStockQuantity) {
+                            setAddStockQuantity('20');
+                          }
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-stone-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                    </label>
+                  </div>
+
+                  {!addIsUnlimitedStock && (
+                    <div className="pt-2 border-t border-stone-200/70 flex items-center gap-2">
+                      <label className="text-xs font-bold text-stone-700 shrink-0">
+                        Số lượng trong kho:
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="vd: 20"
+                        value={addStockQuantity}
+                        onChange={(e) => setAddStockQuantity(e.target.value)}
+                        className="flex-1 bg-white border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-900 font-bold focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
+                      />
+                      <span className="text-xs font-medium text-stone-500">phần</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200">
@@ -606,7 +792,7 @@ export default function AdminMenuPage() {
                   <button
                     type="submit"
                     disabled={addLoading || !addName.trim() || !addPrice}
-                    className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-purple-600/20 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-rose-600/20 transition-all flex items-center justify-center gap-1.5"
                   >
                     {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Thêm món</span>}
                   </button>
@@ -652,7 +838,7 @@ export default function AdminMenuPage() {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
 
@@ -667,7 +853,7 @@ export default function AdminMenuPage() {
                       step="1000"
                       value={editPrice}
                       onChange={(e) => setEditPrice(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 font-mono"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
                     />
                   </div>
 
@@ -678,7 +864,7 @@ export default function AdminMenuPage() {
                     <select
                       value={editCategoryId}
                       onChange={(e) => setEditCategoryId(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
                     >
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -697,7 +883,7 @@ export default function AdminMenuPage() {
                     rows={2}
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
                   />
                 </div>
 
@@ -709,8 +895,51 @@ export default function AdminMenuPage() {
                     type="url"
                     value={editImageUrl}
                     onChange={(e) => setEditImageUrl(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 font-mono"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
                   />
+                </div>
+
+                {/* Stock Quantity Control in Edit Modal */}
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-stone-800 block">Quản lý số lượng còn lại</span>
+                      <span className="text-[11px] text-stone-500 font-medium">Bật nếu muốn giới hạn số phần có thể bán</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!editIsUnlimitedStock}
+                        onChange={(e) => {
+                          const hasLimit = e.target.checked;
+                          setEditIsUnlimitedStock(!hasLimit);
+                          if (hasLimit && !editStockQuantity) {
+                            setEditStockQuantity('20');
+                          }
+                        }}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-stone-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                    </label>
+                  </div>
+
+                  {!editIsUnlimitedStock && (
+                    <div className="pt-2 border-t border-stone-200/70 flex items-center gap-2">
+                      <label className="text-xs font-bold text-stone-700 shrink-0">
+                        Số lượng trong kho:
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="vd: 20"
+                        value={editStockQuantity}
+                        onChange={(e) => setEditStockQuantity(e.target.value)}
+                        className="flex-1 bg-white border border-stone-200 rounded-xl px-3 py-1.5 text-xs text-stone-900 font-bold focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
+                      />
+                      <span className="text-xs font-medium text-stone-500">phần</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200">
@@ -737,7 +966,7 @@ export default function AdminMenuPage() {
                   <button
                     type="submit"
                     disabled={editLoading || !editName.trim() || !editPrice}
-                    className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-purple-600/20 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-rose-600/20 transition-all flex items-center justify-center gap-1.5"
                   >
                     {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Lưu thay đổi</span>}
                   </button>

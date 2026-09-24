@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, price, category_id, description, image_url, available, sort_order } = body;
+    const { name, price, category_id, description, image_url, available, stock_quantity, sort_order } = body;
 
     const updates: Record<string, any> = {};
     if (name !== undefined) updates.name = String(name).trim();
@@ -19,6 +19,16 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     if (description !== undefined) updates.description = description ? String(description).trim() : null;
     if (image_url !== undefined) updates.image_url = image_url ? String(image_url).trim() : null;
     if (available !== undefined) updates.available = Boolean(available);
+    if (stock_quantity !== undefined) {
+      const stockVal =
+        stock_quantity === null || stock_quantity === ''
+          ? null
+          : Math.max(0, Number(stock_quantity));
+      updates.stock_quantity = stockVal;
+      if (stockVal === 0) {
+        updates.available = false;
+      }
+    }
     if (sort_order !== undefined) updates.sort_order = Number(sort_order);
 
     if (isSupabaseConfigured) {

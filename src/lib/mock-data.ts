@@ -16,6 +16,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     price: 25000,
     image_url: 'https://images.unsplash.com/photo-1558857563-b371033873b8?w=500&auto=format&fit=crop&q=60',
     available: true,
+    stock_quantity: 20,
     sort_order: 1,
   },
   {
@@ -27,6 +28,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     price: 30000,
     image_url: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=500&auto=format&fit=crop&q=60',
     available: true,
+    stock_quantity: 15,
     sort_order: 2,
   },
   {
@@ -38,6 +40,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     price: 30000,
     image_url: 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=500&auto=format&fit=crop&q=60',
     available: true,
+    stock_quantity: 10,
     sort_order: 3,
   },
   {
@@ -49,6 +52,7 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     price: 30000,
     image_url: 'https://images.unsplash.com/photo-1576158113840-43db9ff3ef09?w=500&auto=format&fit=crop&q=60',
     available: true,
+    stock_quantity: 12,
     sort_order: 4,
   },
   {
@@ -58,8 +62,9 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     name: 'Kombucha Vải',
     description: 'Vị vải nhiệt đới thơm ngọt ngào đậm đà.',
     price: 30000,
-    image_url: 'https://images.unsplash.com/photo-1587888637140-849b25d80ef9?w=500&auto=format&fit=crop&q=60',
+    image_url: 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=500&auto=format&fit=crop&q=60',
     available: true,
+    stock_quantity: 8,
     sort_order: 5,
   },
   {
@@ -144,6 +149,9 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
 ];
 
 export const INITIAL_TABLES: RestaurantTable[] = [
+  { id: 'tbl-1', table_number: 1, qr_token: 'table-01-token', active: true },
+  { id: 'tbl-2', table_number: 2, qr_token: 'table-02-token', active: true },
+  { id: 'tbl-3', table_number: 3, qr_token: 'table-03-token', active: true },
   { id: 'tbl-620', table_number: 620, qr_token: 'table-620-token', active: true },
 ];
 
@@ -250,6 +258,17 @@ export const updateMockOrderStatus = (id: string, status: import('@/types').Orde
   const found = globalForOrders.mockOrders.find((o) => o.id === id);
   if (found) {
     found.status = status;
+    found.updated_at = new Date().toISOString();
+    return found;
+  }
+  return null;
+};
+
+export const updateMockOrderFeedback = (id: string, rating: number, feedback_note: string) => {
+  const found = globalForOrders.mockOrders.find((o) => o.id === id);
+  if (found) {
+    found.rating = rating;
+    found.feedback_note = feedback_note;
     found.updated_at = new Date().toISOString();
     return found;
   }

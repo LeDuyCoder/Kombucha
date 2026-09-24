@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MenuCategory, MenuItem, CartItem, Order, Session, OrderStatus } from '@/types';
 import { generateSessionToken } from '@/lib/utils';
@@ -11,6 +11,9 @@ import { MenuItemCard } from '@/components/customer/MenuItemCard';
 import { CartDrawer } from '@/components/customer/CartDrawer';
 import { OrderHistoryDrawer } from '@/components/customer/OrderHistoryDrawer';
 import { OrderSuccessModal } from '@/components/customer/OrderSuccessModal';
+import { FeedbackModal } from '@/components/customer/FeedbackModal';
+import { MenuItemDetailModal } from '@/components/customer/MenuItemDetailModal';
+import { LayoutList, LayoutGrid } from 'lucide-react';
 
 export default function CustomerOrderPage() {
   const searchParams = useSearchParams();
@@ -23,6 +26,7 @@ export default function CustomerOrderPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [layoutMode, setLayoutMode] = useState<'list' | 'grid'>('list');
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -30,9 +34,15 @@ export default function CustomerOrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
+  const [feedbackOrder, setFeedbackOrder] = useState<Order | null>(null);
+  const [selectedDetailItem, setSelectedDetailItem] = useState<MenuItem | null>(null);
   const [isStoreOpen, setIsStoreOpen] = useState(true);
 
   const [loading, setLoading] = useState(true);
+
+  // Track previous status to detect transition to COMPLETED
+  const prevStatusRef = useRef<Record<string, OrderStatus>>({});
+  const hasInitializedOrders = useRef(false);
 
   // Check store open status
   useEffect(() => {
@@ -102,24 +112,27 @@ export default function CustomerOrderPage() {
   }, [tableParam]);
 
   // 2. Load menu
-  useEffect(() => {
-    const loadMenu = async () => {
-      try {
-        const resp = await fetch('/api/menu');
-        if (resp.ok) {
-          const data = await resp.json();
-          setCategories(data.categories || []);
-          setMenuItems(data.items || []);
-        }
-      } catch (error) {
-        console.error('Menu load error:', error);
-      } finally {
-        setLoading(false);
+  const loadMenu = useCallback(async () => {
+    try {
+      const resp = await fetch('/api/menu');
+      if (resp.ok) {
+        const data = await resp.json();
+        setCategories(data.categories || []);
+        setMenuItems(data.items || []);
       }
-    };
-
-    loadMenu();
+    } catch (error) {
+      console.error('Menu load error:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadMenu();
+    // Refresh periodically to keep stock up to date across tables
+    const interval = setInterval(loadMenu, 15000);
+    return () => clearInterval(interval);
+  }, [loadMenu]);
 
   // 3. Load orders for current session
   const loadOrders = useCallback(async () => {
@@ -138,39 +151,118 @@ export default function CustomerOrderPage() {
 
   useEffect(() => {
     loadOrders();
+    const interval = setInterval(loadOrders, 5000);
+    return () => clearInterval(interval);
   }, [loadOrders]);
 
-  // 4. Realtime subscription for order status updates
+  // 4. Realtime subscription for order status updates (SSE + Supabase)
   useEffect(() => {
-    if (!isSupabaseConfigured || !sessionId) return;
+    if (!sessionId) return;
 
-    const channel = supabase
-      .channel('customer-orders')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-        },
-        (payload) => {
-          const updated = payload.new as Order;
-          setOrders((prev) =>
-            prev.map((o) => (o.id === updated.id ? { ...o, status: updated.status as OrderStatus, updated_at: updated.updated_at } : o))
-          );
+    // A. Server-Sent Events (SSE)
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/orders/stream');
+      eventSource.onmessage = (event) => {
+        try {
+          if (event.data.trim() === 'heartbeat') return;
+          const data = JSON.parse(event.data);
+          if (data.type === 'order_updated') {
+            const updated = data.order as Partial<Order> & { id: string };
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
+            );
+          }
+          if (data.type === 'store_updated') {
+            setIsStoreOpen(data.isOpen);
+          }
+        } catch {
+          // ignore
         }
-      )
-      .subscribe();
+      };
+    } catch (err) {
+      console.warn('Customer SSE error:', err);
+    }
+
+    // B. Supabase Realtime (Backup)
+    let channel: any = null;
+    if (isSupabaseConfigured) {
+      channel = supabase
+        .channel(`customer-orders-${sessionId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'orders',
+          },
+          (payload) => {
+            const updated = payload.new as Order;
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
+            );
+          }
+        )
+        .subscribe();
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (eventSource) eventSource.close();
+      if (channel) supabase.removeChannel(channel);
     };
   }, [sessionId]);
+
+  // 5. Detect transition to COMPLETED to trigger Feedback popup
+  useEffect(() => {
+    if (!hasInitializedOrders.current) {
+      if (orders.length > 0) {
+        orders.forEach((o) => {
+          prevStatusRef.current[o.id] = o.status;
+        });
+        hasInitializedOrders.current = true;
+      }
+      return;
+    }
+
+    for (const o of orders) {
+      const prev = prevStatusRef.current[o.id];
+      if (prev && prev !== 'COMPLETED' && o.status === 'COMPLETED' && !o.rating) {
+        setFeedbackOrder(o);
+      }
+      prevStatusRef.current[o.id] = o.status;
+    }
+  }, [orders]);
+
+  // Handle feedback submission
+  const handleFeedbackSubmit = useCallback(
+    async (orderId: string, rating: number, note: string) => {
+      const resp = await fetch(`/api/orders/${orderId}/feedback`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, feedback_note: note }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Lỗi gửi đánh giá');
+      }
+
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, rating, feedback_note: note } : o))
+      );
+    },
+    []
+  );
 
   // Cart operations
   const addToCart = useCallback((item: MenuItem) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.menuItem.id === item.id);
+      const currentQty = existing ? existing.quantity : 0;
+      if (typeof item.stock_quantity === 'number' && currentQty >= item.stock_quantity) {
+        alert(`Món "${item.name}" chỉ còn ${item.stock_quantity} phần!`);
+        return prev;
+      }
       if (existing) {
         return prev.map((c) =>
           c.menuItem.id === item.id ? { ...c, quantity: c.quantity + 1 } : c
@@ -231,9 +323,13 @@ export default function CustomerOrderPage() {
           setOrders((prev) => [data.order, ...prev]);
           setCart([]);
           setCartOpen(false);
+          // Refresh live menu stock immediately
+          loadMenu();
         } else {
           const err = await resp.json();
           alert(err.error || 'Lỗi gửi order');
+          // Refresh menu immediately so stock limits and unavailable items reflect in UI
+          loadMenu();
         }
       } catch (error) {
         console.error('Submit order error:', error);
@@ -242,7 +338,7 @@ export default function CustomerOrderPage() {
         setIsSubmitting(false);
       }
     },
-    [tableNumber, sessionId, cart, isStoreOpen]
+    [tableNumber, sessionId, cart, isStoreOpen, loadMenu]
   );
 
   // Filter items by active category
@@ -327,14 +423,24 @@ export default function CustomerOrderPage() {
         onSelect={setActiveCategory}
       />
 
-      {/* Menu Items */}
-      <main className="max-w-xl mx-auto px-4 pt-4 mb-8">
+      {/* Menu Items List */}
+      <main className="max-w-2xl mx-auto px-4 pt-4 mb-8">
+        <div className="flex items-center justify-between pb-3 mb-1">
+          <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+            {filteredItems.length} món đang phục vụ
+          </p>
+          <span className="text-[10px] text-stone-400 font-medium">Chạm vào món để xem chi tiết</span>
+        </div>
+
         {filteredItems.length === 0 ? (
-          <div className="text-center py-12 text-stone-400">
+          <div className="text-center py-12 text-stone-400 animate-in fade-in duration-300">
             <p className="font-medium text-sm">Không có món nào trong danh mục này</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div
+            key={activeCategory}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in-50 duration-300 slide-in-from-bottom-2"
+          >
             {filteredItems.map((item) => (
               <MenuItemCard
                 key={item.id}
@@ -342,6 +448,7 @@ export default function CustomerOrderPage() {
                 quantityInCart={cartQuantityMap.get(item.id) || 0}
                 onAddToCart={addToCart}
                 onRemoveFromCart={removeFromCart}
+                onViewDetail={setSelectedDetailItem}
               />
             ))}
           </div>
@@ -368,6 +475,7 @@ export default function CustomerOrderPage() {
         onClose={() => setOrdersOpen(false)}
         orders={orders}
         tableNumber={tableNumber}
+        onOpenFeedback={(order) => setFeedbackOrder(order)}
       />
 
       {/* Order Success Modal */}
@@ -377,6 +485,26 @@ export default function CustomerOrderPage() {
         order={successOrder}
         tableNumber={tableNumber}
       />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={!!feedbackOrder}
+        onClose={() => setFeedbackOrder(null)}
+        order={feedbackOrder}
+        onSubmit={handleFeedbackSubmit}
+      />
+
+      {/* Item Detail Modal */}
+      {selectedDetailItem && (
+        <MenuItemDetailModal
+          item={selectedDetailItem}
+          isOpen={!!selectedDetailItem}
+          onClose={() => setSelectedDetailItem(null)}
+          quantityInCart={cartQuantityMap.get(selectedDetailItem.id) || 0}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+        />
+      )}
     </div>
   );
 }

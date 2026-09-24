@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { updateMockOrderStatus } from '@/lib/mock-data';
-import { OrderStatus } from '@/types';
-
-import { emitOrderUpdated } from '@/lib/order-events';
+import { updateMockOrderFeedback } from '@/lib/mock-data';
 
 export async function PATCH(
   req: NextRequest,
@@ -18,13 +15,13 @@ export async function PATCH(
       orderId = resolved?.id;
     }
 
-    // Fallback: extract from URL path /api/orders/[id]/status
+    // Fallback: extract from URL path
     if (!orderId) {
       const pathname = req.nextUrl.pathname;
       const parts = pathname.split('/');
-      const statusIdx = parts.indexOf('status');
-      if (statusIdx > 1) {
-        orderId = decodeURIComponent(parts[statusIdx - 1]);
+      const feedbackIdx = parts.indexOf('feedback');
+      if (feedbackIdx > 1) {
+        orderId = decodeURIComponent(parts[feedbackIdx - 1]);
       }
     }
 
@@ -33,18 +30,18 @@ export async function PATCH(
       orderId = body.id;
     }
 
-    const { status } = body as { status: OrderStatus };
-    const validStatuses: OrderStatus[] = ['WAITING', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED'];
+    const { rating, feedback_note } = body;
 
-    if (!orderId || !validStatuses.includes(status)) {
-      return NextResponse.json({ error: 'Trạng thái hoặc mã đơn không hợp lệ' }, { status: 400 });
+    if (!orderId || rating === undefined) {
+      return NextResponse.json({ error: 'Mã đơn và đánh giá là bắt buộc' }, { status: 400 });
     }
 
     if (isSupabaseConfigured) {
       const { data, error } = await supabase
         .from('orders')
         .update({
-          status,
+          rating,
+          feedback_note,
           updated_at: new Date().toISOString(),
         })
         .eq('id', orderId)
@@ -52,20 +49,16 @@ export async function PATCH(
         .single();
 
       if (error) {
-        console.error('Supabase update order status error:', error);
-        return NextResponse.json({ error: 'Không thể cập nhật trạng thái order' }, { status: 500 });
+        console.error('Supabase update feedback error:', error);
+        return NextResponse.json({ error: 'Không thể cập nhật đánh giá' }, { status: 500 });
       }
-
-      emitOrderUpdated(data);
 
       return NextResponse.json({ success: true, order: data });
     } else {
-      const updated = updateMockOrderStatus(orderId, status);
+      const updated = updateMockOrderFeedback(orderId, rating, feedback_note || '');
       if (!updated) {
         return NextResponse.json({ error: 'Order không tồn tại trong bộ nhớ' }, { status: 404 });
       }
-
-      emitOrderUpdated(updated);
 
       return NextResponse.json({
         success: true,
@@ -73,7 +66,7 @@ export async function PATCH(
       });
     }
   } catch (error) {
-    console.error('Update Order Status API Error:', error);
+    console.error('Update Feedback API Error:', error);
     return NextResponse.json({ error: 'Lỗi máy chủ' }, { status: 500 });
   }
 }

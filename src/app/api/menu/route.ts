@@ -55,7 +55,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, price, category_id, description, image_url, available, sort_order } = body;
+    const { name, price, category_id, description, image_url, available, stock_quantity, sort_order } = body;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ error: 'Tên món không được để trống' }, { status: 400 });
@@ -66,13 +66,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Giá tiền không hợp lệ' }, { status: 400 });
     }
 
+    const stockVal =
+      stock_quantity === null || stock_quantity === undefined || stock_quantity === ''
+        ? null
+        : Math.max(0, Number(stock_quantity));
+
     const newItemData = {
       name: name.trim(),
       price: priceNum,
       category_id: category_id || null,
       description: description ? String(description).trim() : null,
       image_url: image_url ? String(image_url).trim() : null,
-      available: available !== undefined ? Boolean(available) : true,
+      available: stockVal === 0 ? false : available !== undefined ? Boolean(available) : true,
+      stock_quantity: stockVal,
       sort_order: sort_order ? Number(sort_order) : 0,
     };
 
@@ -120,7 +126,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, available, price, name, description, category_id, image_url, sort_order } = body;
+    const { id, available, stock_quantity, price, name, description, category_id, image_url, sort_order } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Cần ID món' }, { status: 400 });
@@ -128,6 +134,16 @@ export async function PATCH(req: NextRequest) {
 
     const updates: Record<string, any> = {};
     if (typeof available === 'boolean') updates.available = available;
+    if (stock_quantity !== undefined) {
+      const stockVal =
+        stock_quantity === null || stock_quantity === ''
+          ? null
+          : Math.max(0, Number(stock_quantity));
+      updates.stock_quantity = stockVal;
+      if (stockVal === 0) {
+        updates.available = false;
+      }
+    }
     if (typeof price === 'number') updates.price = price;
     if (name) updates.name = String(name).trim();
     if (description !== undefined) updates.description = description ? String(description).trim() : null;

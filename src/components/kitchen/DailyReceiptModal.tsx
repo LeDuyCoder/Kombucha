@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
 import {
   X,
@@ -11,7 +12,6 @@ import {
   ShoppingBag,
   CheckCircle2,
   RefreshCw,
-  Coffee,
 } from 'lucide-react';
 
 interface DailyReceiptModalProps {
@@ -121,40 +121,40 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in"
       data-receipt-modal="true"
     >
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-stone-200">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-2xl w-full max-h-[96vh] sm:max-h-[92vh] flex flex-col overflow-hidden border border-stone-200">
         {/* Header - Screen Only */}
-        <div className="p-4 border-b border-stone-200 flex items-center justify-between bg-stone-50/80 print:hidden">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-              <DollarSign className="w-5 h-5" />
+        <div className="p-3 sm:p-4 border-b border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50/80 print:hidden">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h2 className="font-extrabold text-stone-900 text-base">
-                Biên Lai &amp; Doanh Thu Trong Ngày
+            <div className="min-w-0">
+              <h2 className="font-extrabold text-stone-900 text-sm sm:text-base leading-tight">
+                Biên Lai &amp; Doanh Thu
               </h2>
-              <p className="text-xs text-stone-500 font-medium">
+              <p className="text-[11px] sm:text-xs text-stone-500 font-medium truncate">
                 Tổng hợp đơn hàng và doanh thu theo ngày
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-white border border-stone-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-stone-700">
-              <Calendar className="w-3.5 h-3.5 text-stone-400" />
+          <div className="flex items-center justify-between sm:justify-end gap-2">
+            <div className="flex items-center gap-1.5 bg-white border border-stone-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-stone-700 flex-1 sm:flex-none">
+              <Calendar className="w-3.5 h-3.5 text-stone-400 shrink-0" />
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-transparent focus:outline-hidden text-xs cursor-pointer"
+                className="bg-transparent focus:outline-hidden text-xs cursor-pointer w-full"
               />
             </div>
 
             <button
               onClick={() => fetchReport(selectedDate)}
-              className="p-2 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 transition-colors"
+              className="p-2 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 transition-colors shrink-0"
               title="Làm mới"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -162,7 +162,7 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 transition-colors"
+              className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 transition-colors shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
@@ -188,8 +188,8 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
             <div className="max-w-md mx-auto bg-white p-6 rounded-2xl border border-stone-200 shadow-xs print:shadow-none print:border-none print:p-2">
               {/* Receipt Header Banner */}
               <div className="text-center border-b border-dashed border-stone-300 pb-4 mb-4">
-                <div className="inline-flex p-2 rounded-xl bg-stone-100 mb-2">
-                  <Coffee className="w-6 h-6 text-stone-800" />
+                <div className="inline-flex rounded-xl overflow-hidden mb-2 border border-stone-200">
+                  <Image src="/logo.jpg" alt="Logo" width={48} height={48} className="object-cover" />
                 </div>
                 <h1 className="text-lg font-black tracking-wider uppercase text-stone-900">
                   KOMBUCHA &amp; TEA HOUSE
@@ -323,11 +323,11 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
         </div>
 
         {/* Action Footer - Screen Only */}
-        <div className="p-4 border-t border-stone-200 bg-white flex items-center justify-end gap-3 print:hidden">
+        <div className="p-3 sm:p-4 border-t border-stone-200 bg-white flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2 sm:gap-3 print:hidden">
           <button
             onClick={handleExportCSV}
             disabled={loading || !report}
-            className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-bold flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             <span>Xuất file Excel (CSV)</span>
@@ -336,7 +336,7 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
           <button
             onClick={handlePrint}
             disabled={loading || !report}
-            className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
             <Printer className="w-4 h-4" />
             <span>In Biên Lai Tổng Kết</span>

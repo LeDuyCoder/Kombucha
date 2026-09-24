@@ -21,23 +21,26 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
   ];
 
   return (
-    <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm border-b border-stone-100 shadow-xs">
-      <div className="max-w-xl mx-auto overflow-x-auto">
-        <div className="flex gap-1.5 px-4 py-2 min-w-max">
-          {allCategories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => onSelect(cat.id)}
-              className={cn(
-                'shrink-0 px-4 py-2 rounded-xl text-sm font-bold tracking-tight transition-all duration-200 active:scale-95',
-                activeCategory === cat.id
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              )}
-            >
-              {cat.name}
-            </button>
-          ))}
+    <div className="sticky top-16 z-20 bg-stone-50/90 backdrop-blur-md border-b border-stone-200/70 shadow-2xs py-2.5 transition-all">
+      <div className="max-w-2xl mx-auto overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-2 px-4 min-w-max">
+          {allCategories.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => onSelect(cat.id)}
+                className={cn(
+                  'shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold tracking-tight transition-all duration-300 ease-out active:scale-95 shadow-2xs cursor-pointer',
+                  isActive
+                    ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20 scale-[1.02]'
+                    : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50'
+                )}
+              >
+                {cat.name}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

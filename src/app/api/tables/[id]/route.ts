@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { updateMockTable, deleteMockTable, getMockTables } from '@/lib/mock-data';
+import { updateMockTable, deleteMockTable } from '@/lib/mock-data';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -20,25 +21,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ error: 'Số phòng không hợp lệ' }, { status: 400 });
       }
 
-      // Check collision with another table
-      if (isSupabaseConfigured) {
-        const { data: existing } = await supabase
-          .from('restaurant_tables')
-          .select('id')
-          .eq('table_number', num)
-          .neq('id', id)
-          .maybeSingle();
-
-        if (existing) {
-          return NextResponse.json({ error: `Phòng ${num} đã được sử dụng` }, { status: 400 });
-        }
-      } else {
-        const mockList = getMockTables();
-        if (mockList.some((t) => t.table_number === num && t.id !== id)) {
-          return NextResponse.json({ error: `Phòng ${num} đã được sử dụng` }, { status: 400 });
-        }
-      }
-
       updates.table_number = num;
       updates.qr_token = `table-${String(num).padStart(2, '0')}-token`;
     }
@@ -51,6 +33,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Không có dữ liệu thay đổi' }, { status: 400 });
     }
 
+    // 1. Try Supabase if configured
     if (isSupabaseConfigured) {
       const { data, error } = await supabase
         .from('restaurant_tables')
@@ -67,7 +50,37 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: true, table: data });
     }
 
-    // Mock mode
+    // 2. Try direct PostgreSQL
+    try {
+      const setClauses: string[] = [];
+      const values: any[] = [];
+      let idx = 1;
+
+      if (updates.table_number !== undefined) {
+        setClauses.push(`table_number = $${idx++}`);
+        values.push(updates.table_number);
+        setClauses.push(`qr_token = $${idx++}`);
+        values.push(updates.qr_token);
+      }
+      if (updates.active !== undefined) {
+        setClauses.push(`active = $${idx++}`);
+        values.push(updates.active);
+      }
+
+      values.push(id);
+      const res = await query(
+        `UPDATE restaurant_tables SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`,
+        values
+      );
+
+      if (res.rows && res.rows.length > 0) {
+        return NextResponse.json({ success: true, table: res.rows[0] });
+      }
+    } catch (pgErr) {
+      console.warn('PostgreSQL update table fallback:', pgErr);
+    }
+
+    // 3. Mock fallback
     const updated = updateMockTable(id, updates);
     if (!updated) {
       return NextResponse.json({ error: 'Không tìm thấy phòng' }, { status: 404 });
@@ -84,6 +97,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
 
+    // 1. Try Supabase if configured
     if (isSupabaseConfigured) {
       const { error } = await supabase
         .from('restaurant_tables')
@@ -98,7 +112,17 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: true });
     }
 
-    // Mock mode
+    // 2. Try direct PostgreSQL
+    try {
+      const res = await query('DELETE FROM restaurant_tables WHERE id = $1 RETURNING id', [id]);
+      if (res.rows && res.rows.length > 0) {
+        return NextResponse.json({ success: true });
+      }
+    } catch (pgErr) {
+      console.warn('PostgreSQL delete table fallback:', pgErr);
+    }
+
+    // 3. Mock fallback
     const deleted = deleteMockTable(id);
     if (!deleted) {
       return NextResponse.json({ error: 'Không tìm thấy phòng để xóa' }, { status: 404 });

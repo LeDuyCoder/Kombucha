@@ -12,6 +12,7 @@ import {
   CheckCheck,
   XCircle,
   ChefHat,
+  Star,
 } from 'lucide-react';
 
 interface OrderCardProps {
@@ -121,6 +122,20 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           </div>
         )}
       </div>
+
+      {order.rating && (
+        <div className="mx-3 mb-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs flex flex-col gap-1.5 shadow-sm">
+          <div className="flex items-center gap-1.5 font-bold text-amber-800">
+            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+            <span>Khách đánh giá: {order.rating}/5 sao</span>
+          </div>
+          {order.feedback_note && (
+            <p className="text-[11px] italic text-amber-700 leading-relaxed bg-amber-100/50 p-1.5 rounded-lg border border-amber-200/50">
+              "{order.feedback_note}"
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Action Footer */}
       <div className="p-3 border-t border-stone-100 bg-stone-50/50">

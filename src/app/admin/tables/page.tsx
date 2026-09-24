@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { RestaurantTable } from '@/types';
 import { QRModal } from '@/components/admin/QRModal';
 import { 
@@ -196,24 +197,36 @@ export default function AdminTablesPage() {
   const inactiveCount = tables.length - activeCount;
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 p-6 selection:bg-blue-100">
+    <div className="min-h-screen bg-stone-50 text-stone-900 p-6 selection:bg-rose-100">
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+          <div className="flex items-center gap-3.5">
             <Link
               href="/"
-              className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors"
+              className="p-2.5 rounded-2xl bg-white hover:bg-stone-100 text-stone-600 border border-stone-200/80 shadow-xs hover:shadow-sm transition-all active:scale-95 shrink-0"
+              title="Quay lại trang chủ"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
+
+            <div className="w-12 h-12 rounded-2xl overflow-hidden ring-1 ring-stone-200 shadow-xs shrink-0 relative bg-white p-0.5">
+              <div className="w-full h-full rounded-[12px] overflow-hidden relative">
+                <Image src="/logo.jpg" alt="Logo" fill className="object-cover" priority />
+              </div>
+            </div>
+
             <div>
-              <h1 className="text-xl font-black text-stone-900 flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-blue-600" />
-                <span>Quản Lý Phòng &amp; Mã QR</span>
-              </h1>
-              <p className="text-xs text-stone-500 font-medium">
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight leading-tight">
+                  Quản Lý Phòng &amp; Mã QR
+                </h1>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 hidden xs:inline-block">
+                  QR Master
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 font-medium mt-0.5">
                 Tạo, chỉnh sửa, khóa và in mã QR cho từng phòng đặt món
               </p>
             </div>
@@ -223,10 +236,10 @@ export default function AdminTablesPage() {
             <button
               onClick={fetchTables}
               disabled={loading}
-              className="p-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-2xs transition-colors text-xs font-bold flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 shadow-xs transition-colors text-xs font-bold flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
               title="Tải lại danh sách"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-rose-600' : ''}`} />
               <span className="hidden sm:inline">Làm mới</span>
             </button>
 
@@ -236,7 +249,7 @@ export default function AdminTablesPage() {
                 setAddError('');
                 setIsAddOpen(true);
               }}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm shadow-blue-600/20 transition-all active:scale-95"
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm shadow-rose-200 transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Thêm phòng mới</span>
@@ -276,7 +289,7 @@ export default function AdminTablesPage() {
 
           {loading ? (
             <div className="bg-white border border-stone-200 rounded-2xl p-12 text-center text-stone-400 flex flex-col items-center gap-3">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+              <Loader2 className="w-6 h-6 animate-spin text-rose-600" />
               <p className="text-sm font-medium">Đang tải danh sách phòng...</p>
             </div>
           ) : tables.length === 0 ? (
@@ -284,7 +297,7 @@ export default function AdminTablesPage() {
               <p className="text-sm font-bold">Chưa có phòng nào trong hệ thống</p>
               <button
                 onClick={() => setIsAddOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>Thêm phòng đầu tiên (vd: 620)</span>
@@ -301,7 +314,7 @@ export default function AdminTablesPage() {
                     key={table.id || table.table_number}
                     className={`bg-white border rounded-2xl p-5 shadow-xs transition-all flex flex-col justify-between ${
                       isActive 
-                        ? 'border-stone-200 hover:border-blue-300 hover:shadow-md' 
+                        ? 'border-stone-200 hover:border-rose-300 hover:shadow-md' 
                         : 'border-stone-200 opacity-60 bg-stone-50/50'
                     }`}
                   >
@@ -309,7 +322,7 @@ export default function AdminTablesPage() {
                       {/* Top Header of Card */}
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-black px-3.5 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="text-sm font-black px-3.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200">
                             Phòng {table.table_number}
                           </span>
                         </div>
@@ -346,7 +359,7 @@ export default function AdminTablesPage() {
                         {/* QR Code & Print Button */}
                         <button
                           onClick={() => setSelectedTable(table)}
-                          className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs shadow-blue-600/20 transition-all active:scale-95"
+                          className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs shadow-rose-600/20 transition-all active:scale-95"
                         >
                           <QrCode className="w-3.5 h-3.5" />
                           <span>Mã QR &amp; In</span>
@@ -404,7 +417,7 @@ export default function AdminTablesPage() {
               </button>
 
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600">
+                <div className="p-2.5 rounded-2xl bg-rose-50 text-rose-600">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
@@ -431,7 +444,7 @@ export default function AdminTablesPage() {
                     value={newTableNum}
                     onChange={(e) => setNewTableNum(e.target.value)}
                     autoFocus
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-bold"
                   />
                   <p className="text-[11px] text-stone-400 mt-1">
                     Hệ thống sẽ tự động tạo mã QR đặt món duy nhất cho phòng này.
@@ -449,7 +462,7 @@ export default function AdminTablesPage() {
                   <button
                     type="submit"
                     disabled={addLoading || !newTableNum}
-                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-blue-600/20 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-rose-600/20 transition-all flex items-center justify-center gap-1.5"
                   >
                     {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Thêm phòng</span>}
                   </button>
@@ -496,7 +509,7 @@ export default function AdminTablesPage() {
                     min="1"
                     value={editTableNum}
                     onChange={(e) => setEditTableNum(e.target.value)}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-bold"
                   />
                 </div>
 
@@ -524,7 +537,7 @@ export default function AdminTablesPage() {
                   <button
                     type="submit"
                     disabled={editLoading || !editTableNum}
-                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-blue-600/20 transition-all flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-rose-600/20 transition-all flex items-center justify-center gap-1.5"
                   >
                     {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Lưu thay đổi</span>}
                   </button>

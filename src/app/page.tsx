@@ -1,159 +1,251 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Coffee, ChefHat, QrCode, UtensilsCrossed, ArrowRight, KeyRound } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import {
+  ChefHat,
+  QrCode,
+  ArrowRight,
+  KeyRound,
+  Layers,
+  ArrowUpRight,
+  DoorOpen,
+  Sparkles,
+} from 'lucide-react';
 
 export default function HomePage() {
+  const router = useRouter();
+  const [tableInput, setTableInput] = useState('');
+  const [tables, setTables] = useState<{ id: string; table_number: number; active: boolean }[]>([]);
+  const [loadingTables, setLoadingTables] = useState(true);
+
+  useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        const resp = await fetch('/api/tables');
+        if (resp.ok) {
+          const data = await resp.json();
+          const activeList = (data.tables || []).filter((t: { active?: boolean }) => t.active !== false);
+          setTables(activeList);
+        }
+      } catch (err) {
+        console.error('Fetch tables error:', err);
+      } finally {
+        setLoadingTables(false);
+      }
+    };
+    fetchTables();
+  }, []);
+
+  const goToTable = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tableInput.trim()) return;
+    const cleanNum = tableInput.trim().replace(/^phòng\s*/i, '');
+    router.push(`/order?table=${encodeURIComponent(cleanNum)}`);
+  };
+
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900 flex flex-col justify-center items-center p-6 selection:bg-blue-200">
-      <div className="max-w-xl w-full space-y-8">
+    <main className="min-h-screen bg-stone-50 text-stone-800 flex flex-col justify-between items-center px-4 py-8 sm:py-12 selection:bg-rose-100 selection:text-rose-900 font-sans">
+      <div className="w-full max-w-xl my-auto space-y-8">
+        
         {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex p-3.5 rounded-2xl bg-blue-100 text-blue-600 ring-1 ring-blue-500/20 shadow-xs">
-            <Coffee className="w-8 h-8" />
+          <div className="inline-flex p-1 rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/80">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden relative">
+              <Image
+                src="/logo.jpg"
+                alt="Logo"
+                fill
+                sizes="80px"
+                className="object-cover"
+                priority
+              />
+            </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-linear-to-r from-blue-600 via-indigo-600 to-sky-600 bg-clip-text text-transparent">
-            Kombucha &amp; Tea Order System
-          </h1>
-          <p className="text-stone-500 text-sm max-w-md mx-auto">
-            Hệ thống đặt món tại phòng bằng QR code và quản lý order realtime cho quầy bar / bếp.
-          </p>
+          
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 text-[11px] font-bold border border-rose-200/60 mb-1.5">
+              <Sparkles className="w-3 h-3" />
+              <span>Tiệm Trà &amp; Kombucha</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900">
+              Kombucha &amp; Tea House
+            </h1>
+            <p className="text-stone-400 text-xs sm:text-sm mt-0.5">
+              Hệ thống gọi món tại phòng &amp; Quản trị vận hành
+            </p>
+          </div>
         </div>
 
-        {/* Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Customer Order Page */}
-          <Link
-            href="/order?table=620"
-            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-blue-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <UtensilsCrossed className="w-5 h-5" />
+        {/* Customer Quick-Order Card */}
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/80 shadow-sm shadow-stone-200/50 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                <DoorOpen className="w-4 h-4" />
               </div>
-              <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-blue-700 transition-colors">
-                  Trang Khách Đặt Món
-                </h3>
-                <p className="text-xs text-stone-500 mt-1">
-                  Mở menu với tư cách khách hàng ngồi tại Phòng 620.
-                </p>
-              </div>
+              <span className="font-bold text-sm text-stone-800">
+                Thực Khách Gọi Món
+              </span>
             </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
-              <span>Thử đặt món ngay</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </div>
-          </Link>
+            <span className="text-[11px] text-stone-400 font-medium">
+              Nhập số phòng
+            </span>
+          </div>
 
-          {/* Kitchen Display */}
-          <Link
-            href="/kitchen"
-            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-indigo-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <ChefHat className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-indigo-700 transition-colors">
-                  Màn Hình Bếp (Kitchen)
-                </h3>
-                <p className="text-xs text-stone-500 mt-1">
-                  Kanban board nhận order realtime và cập nhật trạng thái làm món.
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-indigo-600 group-hover:translate-x-1 transition-transform">
-              <span>Mở Kitchen Dashboard</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </div>
-          </Link>
-
-          {/* QR Generator */}
-          <Link
-            href="/admin/tables"
-            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-blue-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <QrCode className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-blue-700 transition-colors">
-                  Quản Lý Phòng &amp; Mã QR
-                </h3>
-                <p className="text-xs text-stone-500 mt-1">
-                  Xem danh sách phòng, tạo mã QR và in mã đặt trong phòng.
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
-              <span>Xem danh sách phòng</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </div>
-          </Link>
-
-          {/* Menu Management */}
-          <Link
-            href="/admin/menu"
-            className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-blue-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Coffee className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-blue-700 transition-colors">
-                  Quản Lý Menu
-                </h3>
-                <p className="text-xs text-stone-500 mt-1">
-                  Xem menu, bật/tắt trạng thái Còn món / Hết món tức thì.
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
-              <span>Quản lý món</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </div>
-          </Link>
-
-          {/* Settings & Password Management */}
-          <Link
-            href="/admin/settings"
-            className="group sm:col-span-2 p-5 rounded-2xl bg-white border border-stone-200 hover:border-amber-300 hover:shadow-md transition-all shadow-xs flex items-center justify-between"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-stone-800 group-hover:text-amber-700 transition-colors">
-                  Cài Đặt &amp; Mật Khẩu Bếp
-                </h3>
-                <p className="text-xs text-stone-500 mt-0.5">
-                  Đổi mã PIN bảo mật cho Bếp (/kitchen) và trạng thái đóng/mở cửa quán.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center text-xs font-bold text-amber-600 group-hover:translate-x-1 transition-transform shrink-0">
-              <span>Cấu hình</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </div>
-          </Link>
-        </div>
-
-        {/* Quick Demo Rooms */}
-        <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs text-center space-y-2">
-          <p className="text-xs text-stone-500 font-medium">Truy cập nhanh menu phòng:</p>
-          <div className="flex justify-center gap-2 flex-wrap">
-            <Link
-              href="/order?table=620"
-              className="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-700 border border-blue-200 transition-colors inline-flex items-center gap-1.5"
+          <form onSubmit={goToTable} className="flex gap-2">
+            <input
+              value={tableInput}
+              onChange={(e) => setTableInput(e.target.value)}
+              placeholder="Nhập số phòng (vd: 1, 2, 620)..."
+              className="flex-1 rounded-xl border border-stone-200 bg-stone-50/60 px-3.5 py-2.5 text-sm text-stone-900 placeholder-stone-400 outline-none focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 shadow-sm shadow-rose-200 transition-all flex items-center gap-1.5 shrink-0"
             >
-              <span>Phòng 620</span>
-            </Link>
+              <span>Vào Menu</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+
+          {/* Quick Room Badges from real database */}
+          <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs">
+            <span className="text-stone-400 text-[11px] mr-1">Phòng nhanh:</span>
+            {loadingTables ? (
+              <span className="text-[11px] text-stone-400 italic">Đang tải...</span>
+            ) : tables.length === 0 ? (
+              <span className="text-[11px] text-stone-400 italic">Chưa có phòng nào</span>
+            ) : (
+              tables.map((t) => (
+                <Link
+                  key={t.id || t.table_number}
+                  href={`/order?table=${t.table_number}`}
+                  className="px-3 py-1 rounded-lg bg-stone-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-stone-600 border border-transparent text-[11px] font-bold transition-all active:scale-95"
+                >
+                  Phòng {String(t.table_number).padStart(2, '0')}
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Operational Modules - Refined Modern List Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <ModuleCard
+            href="/kitchen"
+            icon={<ChefHat className="w-5 h-5" />}
+            title="Màn Hình Bếp"
+            subtitle="Nhận đơn Realtime"
+            color="amber"
+          />
+          <ModuleCard
+            href="/admin/tables"
+            icon={<QrCode className="w-5 h-5" />}
+            title="Phòng &amp; Mã QR"
+            subtitle="Tạo &amp; in mã để bàn"
+            color="emerald"
+          />
+          <ModuleCard
+            href="/admin/menu"
+            icon={<Layers className="w-5 h-5" />}
+            title="Quản Lý Menu"
+            subtitle="Bật/tắt món &amp; giá"
+            color="sky"
+          />
+          <ModuleCard
+            href="/admin/settings"
+            icon={<KeyRound className="w-5 h-5" />}
+            title="Cài Đặt Hệ Thống"
+            subtitle="Mã PIN &amp; Đóng mở quán"
+            color="purple"
+          />
+        </div>
+
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-8 text-center text-[11px] text-stone-400 font-medium">
+        © {new Date().getFullYear()} Kombucha &amp; Tea House • Hệ thống vận hành quán
+      </footer>
+    </main>
+  );
+}
+
+/* ── Modern Compact Module Card ── */
+type ModuleColor = 'amber' | 'emerald' | 'sky' | 'purple';
+
+const colorStyles: Record<
+  ModuleColor,
+  { bg: string; text: string; ring: string; border: string }
+> = {
+  amber: {
+    bg: 'bg-amber-50 text-amber-700',
+    text: 'group-hover:text-amber-700',
+    ring: 'group-hover:ring-amber-200',
+    border: 'hover:border-amber-300',
+  },
+  emerald: {
+    bg: 'bg-emerald-50 text-emerald-700',
+    text: 'group-hover:text-emerald-700',
+    ring: 'group-hover:ring-emerald-200',
+    border: 'hover:border-emerald-300',
+  },
+  sky: {
+    bg: 'bg-sky-50 text-sky-700',
+    text: 'group-hover:text-sky-700',
+    ring: 'group-hover:ring-sky-200',
+    border: 'hover:border-sky-300',
+  },
+  purple: {
+    bg: 'bg-purple-50 text-purple-700',
+    text: 'group-hover:text-purple-700',
+    ring: 'group-hover:ring-purple-200',
+    border: 'hover:border-purple-300',
+  },
+};
+
+function ModuleCard({
+  href,
+  icon,
+  title,
+  subtitle,
+  color,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  color: ModuleColor;
+}) {
+  const c = colorStyles[color];
+
+  return (
+    <Link
+      href={href}
+      className={`group flex items-center justify-between p-4 rounded-2xl bg-white border border-stone-200/80 ${c.border} hover:shadow-md hover:shadow-stone-200/60 transition-all duration-200 active:scale-[0.98]`}
+    >
+      <div className="flex items-center gap-3.5 min-w-0">
+        <div
+          className={`w-11 h-11 rounded-xl ${c.bg} flex items-center justify-center shrink-0 transition-transform group-hover:scale-105`}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <div className="font-bold text-sm text-stone-800 truncate group-hover:text-stone-950 transition-colors">
+            {title}
+          </div>
+          <div className="text-[11px] text-stone-400 font-medium truncate mt-0.5">
+            {subtitle}
           </div>
         </div>
       </div>
-    </main>
+
+      <div className="w-8 h-8 rounded-full bg-stone-50 group-hover:bg-stone-100 flex items-center justify-center text-stone-400 group-hover:text-stone-700 shrink-0 ml-2 transition-colors">
+        <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      </div>
+    </Link>
   );
 }

@@ -19,6 +19,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Kombucha & Tea House",
   description: "Website đặt món tại phòng và quản lý order realtime cho quầy bar / bếp",
+  icons: {
+    icon: [
+      { url: '/icon.png', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    apple: '/apple-icon.png',
+    shortcut: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

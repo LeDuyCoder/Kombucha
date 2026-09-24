@@ -22,6 +22,7 @@ export interface MenuItem {
   price: number;
   image_url?: string | null;
   available: boolean;
+  stock_quantity?: number | null;
   sort_order: number;
 }
 
@@ -55,6 +56,8 @@ export interface Order {
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
+  rating?: number | null;
+  feedback_note?: string | null;
 }
 
 export interface CartItem {

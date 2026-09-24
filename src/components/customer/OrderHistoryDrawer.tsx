@@ -3,13 +3,14 @@
 import React from 'react';
 import { Order, OrderStatus } from '@/types';
 import { formatCurrency, formatTime } from '@/lib/utils';
-import { X, Clock, ChefHat, Check, CircleDot } from 'lucide-react';
+import { X, Clock, ChefHat, Check, CircleDot, Star, MessageSquareHeart } from 'lucide-react';
 
 interface OrderHistoryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   orders: Order[];
   tableNumber: number | null;
+  onOpenFeedback?: (order: Order) => void;
 }
 
 const statusConfig: Record<
@@ -25,8 +26,8 @@ const statusConfig: Record<
   PREPARING: {
     label: 'Đang chuẩn bị',
     icon: <ChefHat className="w-3.5 h-3.5" />,
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50 border-blue-200',
+    color: 'text-amber-800',
+    bgColor: 'bg-amber-100/80 border-amber-300/80',
   },
   READY: {
     label: 'Món đã sẵn sàng',
@@ -53,6 +54,7 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({
   onClose,
   orders,
   tableNumber,
+  onOpenFeedback,
 }) => {
   if (!isOpen) return null;
 
@@ -131,11 +133,39 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({
                     </div>
                   )}
 
-                  <div className="px-3 pb-3 flex justify-end">
+                  <div className="px-3 pb-3 flex justify-between items-center border-t border-stone-100/60 pt-2.5">
                     <span className="text-xs font-bold text-stone-800">
                       Tổng: {formatCurrency(order.total_amount)}
                     </span>
+
+                    {/* Feedback button or display */}
+                    {order.status === 'COMPLETED' && (
+                      <div>
+                        {order.rating ? (
+                          <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg text-amber-800 text-[11px] font-semibold">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span>{order.rating}/5 sao</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => onOpenFeedback?.(order)}
+                            className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs transition"
+                          >
+                            <MessageSquareHeart className="w-3.5 h-3.5" />
+                            <span>Đánh giá</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Show feedback note if provided */}
+                  {order.status === 'COMPLETED' && order.feedback_note && (
+                    <div className="px-3 pb-3 pt-1 border-t border-stone-100 bg-amber-50/40 text-[11px] text-amber-900 flex items-start gap-1.5">
+                      <span className="font-bold text-amber-800 shrink-0">Phản hồi:</span>
+                      <span className="italic">"{order.feedback_note}"</span>
+                    </div>
+                  )}
                 </div>
               );
             })

@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
-  Coffee,
   Clock,
   Volume2,
   VolumeX,
@@ -14,6 +14,7 @@ import {
   DoorOpen,
   DoorClosed,
   KeyRound,
+  MessageSquareHeart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ interface KitchenHeaderProps {
   isStoreOpen: boolean;
   onToggleStoreOpen: () => void;
   onOpenReceipt: () => void;
+  onOpenFeedback: () => void;
 }
 
 export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
@@ -33,6 +35,7 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
   isStoreOpen,
   onToggleStoreOpen,
   onOpenReceipt,
+  onOpenFeedback,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -56,17 +59,26 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
   });
 
   return (
-    <header className="flex-none bg-white border-b border-stone-200 px-4 md:px-6 py-3 flex items-center justify-between shadow-xs z-10">
+    <header className="flex-none bg-white border-b border-stone-200 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-xs z-10 gap-2">
       {/* Left: Logo & Brand */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-600/20">
-          <Coffee className="w-5 h-5 text-white" />
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-md shrink-0 border border-stone-200">
+          <Image
+            src="/logo.jpg"
+            alt="Logo"
+            width={40}
+            height={40}
+            className="w-full h-full object-cover"
+            priority
+          />
         </div>
-        <div>
-          <h1 className="text-stone-900 font-bold text-base md:text-lg leading-tight tracking-tight">
-            Bếp – Kombucha &amp; Tea House
+        <div className="min-w-0">
+          <h1 className="text-stone-900 font-bold text-sm sm:text-base md:text-lg leading-tight tracking-tight truncate max-w-[130px] xs:max-w-[180px] sm:max-w-none">
+            Bếp – Kombucha &amp; Tea
           </h1>
-          <p className="text-stone-500 text-xs font-medium">Kitchen Display System</p>
+          <p className="text-stone-500 text-[10px] sm:text-xs font-medium truncate hidden xs:block">
+            Kitchen Display System
+          </p>
         </div>
       </div>
 
@@ -82,13 +94,13 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
       </div>
 
       {/* Right: Store Toggle, Receipt, Audio, Logout */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
         {/* Store Open / Close Toggle Button */}
         <button
           onClick={onToggleStoreOpen}
           title={isStoreOpen ? 'Nhấn để đóng cửa quán' : 'Nhấn để mở cửa quán'}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 shadow-xs border',
+            'flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 shadow-xs border shrink-0',
             isStoreOpen
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
               : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
@@ -96,13 +108,13 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
         >
           {isStoreOpen ? (
             <>
-              <DoorOpen className="w-4 h-4 text-emerald-600" />
-              <span>Đang Mở Cửa</span>
+              <DoorOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+              <span className="hidden sm:inline">Đang Mở Cửa</span>
             </>
           ) : (
             <>
-              <DoorClosed className="w-4 h-4 text-rose-600" />
-              <span>Đã Đóng Cửa</span>
+              <DoorClosed className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-600" />
+              <span className="hidden sm:inline">Đã Đóng Cửa</span>
             </>
           )}
         </button>
@@ -111,16 +123,26 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
         <button
           onClick={onOpenReceipt}
           title="Xuất biên lai & doanh thu trong ngày"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-900 text-white hover:bg-stone-800 text-xs font-bold transition-all duration-200 active:scale-95 shadow-xs"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-stone-900 text-white hover:bg-stone-800 text-xs font-bold transition-all duration-200 active:scale-95 shadow-xs shrink-0 cursor-pointer"
         >
-          <FileText className="w-4 h-4 text-amber-400" />
-          <span className="hidden sm:inline">Biên Lai Ngày</span>
+          <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+          <span className="hidden md:inline">Biên Lai Ngày</span>
+        </button>
+
+        {/* Feedback Button */}
+        <button
+          onClick={onOpenFeedback}
+          title="Xem đánh giá và phản hồi của khách hàng"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-xs font-bold transition-all duration-200 active:scale-95 shadow-xs shrink-0 cursor-pointer"
+        >
+          <MessageSquareHeart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
+          <span className="hidden md:inline">Đánh giá</span>
         </button>
 
         {/* Realtime status */}
         <div
           className={cn(
-            'hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border',
+            'hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border shrink-0',
             connected
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
               : 'bg-red-50 text-red-700 border-red-200'
@@ -146,34 +168,34 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
           onClick={toggleMuted}
           title={isMuted ? 'Bật âm thanh thông báo' : 'Tắt âm thanh thông báo'}
           className={cn(
-            'p-2 rounded-xl border transition-all duration-200 active:scale-95 shadow-xs',
+            'p-1.5 sm:p-2 rounded-xl border transition-all duration-200 active:scale-95 shadow-xs shrink-0',
             isMuted
               ? 'bg-stone-100 text-stone-500 border-stone-200 hover:bg-stone-200'
               : 'bg-amber-600 text-white border-amber-500 hover:bg-amber-500 shadow-amber-600/20'
           )}
         >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          {isMuted ? <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
         </button>
 
         {/* Settings button */}
         <Link
           href="/admin/settings"
           title="Cài đặt hệ thống & đổi mã PIN Bếp"
-          className="p-2 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 transition-all duration-200 active:scale-95 shadow-xs"
+          className="p-1.5 sm:p-2 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 transition-all duration-200 active:scale-95 shadow-xs shrink-0"
         >
-          <KeyRound className="w-4 h-4" />
+          <KeyRound className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </Link>
 
         {/* Logout button */}
         <button
           onClick={async () => {
-            await fetch('/api/kitchen/logout', { method: 'POST' });
-            window.location.href = '/kitchen/login';
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
           }}
-          title="Đăng xuất khỏi Bếp"
-          className="p-2 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all duration-200 active:scale-95 shadow-xs"
+          title="Đăng xuất khỏi hệ thống"
+          className="p-1.5 sm:p-2 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all duration-200 active:scale-95 shadow-xs shrink-0"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
       </div>
     </header>

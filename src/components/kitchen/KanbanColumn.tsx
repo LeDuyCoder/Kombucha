@@ -63,15 +63,15 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       className={cn(
-        'flex-1 flex flex-col min-w-[280px] max-w-sm rounded-2xl bg-white border shadow-xs overflow-hidden transition-all',
+        'flex-1 flex flex-col w-full md:min-w-[260px] lg:min-w-[280px] md:max-w-sm rounded-2xl bg-white border shadow-xs overflow-hidden transition-all',
         styles.border
       )}
     >
       {/* Column Header */}
-      <div className={cn('px-4 py-3 flex items-center justify-between', styles.headerBg)}>
+      <div className={cn('px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between', styles.headerBg)}>
         <div className="flex items-center gap-2">
-          <span className={cn('w-2.5 h-2.5 rounded-full animate-pulse', styles.accentDot)} />
-          <h2 className="font-bold text-stone-900 text-sm tracking-tight">{title}</h2>
+          <span className={cn('w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full animate-pulse', styles.accentDot)} />
+          <h2 className="font-bold text-stone-900 text-xs sm:text-sm tracking-tight">{title}</h2>
         </div>
         <span
           className={cn(

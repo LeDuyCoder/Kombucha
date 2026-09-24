@@ -3,22 +3,33 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const isSupabaseConfigured = Boolean(
-  supabaseUrl && 
-  supabaseAnonKey && 
+const isUrlValid = Boolean(
+  supabaseUrl &&
+  (supabaseUrl.startsWith('http://') || supabaseUrl.startsWith('https://')) &&
   !supabaseUrl.includes('your-project') &&
-  !supabaseAnonKey.includes('your-anon-key')
+  !supabaseUrl.includes('placeholder')
 );
 
-// Create Supabase client singleton
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-url.supabase.co',
-  supabaseAnonKey || 'placeholder-anon-key',
-  {
-    realtime: {
-      params: {
-        eventsPerSecond: 10,
-      },
-    },
-  }
+const isKeyValid = Boolean(
+  supabaseAnonKey &&
+  !supabaseAnonKey.includes('your-anon-key') &&
+  !supabaseAnonKey.includes('placeholder')
 );
+
+export const isSupabaseConfigured = isUrlValid && isKeyValid;
+
+// Safe URL fallback for createClient singleton
+const safeUrl = (supabaseUrl && (supabaseUrl.startsWith('http://') || supabaseUrl.startsWith('https://')))
+  ? supabaseUrl
+  : 'https://placeholder-project.supabase.co';
+
+const safeKey = supabaseAnonKey || 'placeholder-anon-key-safe-fallback-12345';
+
+// Create Supabase client singleton
+export const supabase = createClient(safeUrl, safeKey, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});

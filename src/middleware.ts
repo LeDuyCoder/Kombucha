@@ -5,24 +5,32 @@ import { verifyKitchenSession, COOKIE_NAME } from '@/lib/auth';
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   
-  // Protect /kitchen path
-  if (url.pathname === '/kitchen' || url.pathname.startsWith('/kitchen/')) {
-    // Skip protection for the login page itself and API routes inside it
-    if (url.pathname === '/kitchen/login' || url.pathname.startsWith('/api/')) {
-      return NextResponse.next();
-    }
+  // Public paths that do not require PIN authentication
+  const isPublicPath = 
+    url.pathname === '/login' ||
+    url.pathname.startsWith('/order') || 
+    url.pathname.startsWith('/api') || 
+    url.pathname.startsWith('/_next') ||
+    url.pathname.includes('.'); // Static files like favicon, images
 
+  if (!isPublicPath) {
     const token = req.cookies.get(COOKIE_NAME)?.value;
 
     if (!token) {
-      url.pathname = '/kitchen/login';
+      url.pathname = '/login';
+      if (req.nextUrl.pathname !== '/') {
+        url.searchParams.set('redirect', req.nextUrl.pathname);
+      }
       return NextResponse.redirect(url);
     }
 
     const isValid = await verifyKitchenSession(token);
     if (!isValid) {
       // Token exists but invalid/expired, redirect to login
-      url.pathname = '/kitchen/login';
+      url.pathname = '/login';
+      if (req.nextUrl.pathname !== '/') {
+        url.searchParams.set('redirect', req.nextUrl.pathname);
+      }
       const response = NextResponse.redirect(url);
       response.cookies.delete(COOKIE_NAME);
       return response;
@@ -33,5 +41,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/kitchen/:path*', '/kitchen'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
