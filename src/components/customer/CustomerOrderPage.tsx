@@ -30,8 +30,27 @@ export default function CustomerOrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successOrder, setSuccessOrder] = useState<Order | null>(null);
+  const [isStoreOpen, setIsStoreOpen] = useState(true);
 
   const [loading, setLoading] = useState(true);
+
+  // Check store open status
+  useEffect(() => {
+    const checkStore = async () => {
+      try {
+        const resp = await fetch('/api/store/status');
+        if (resp.ok) {
+          const data = await resp.json();
+          setIsStoreOpen(data.isOpen ?? true);
+        }
+      } catch (err) {
+        console.error('Check store status error:', err);
+      }
+    };
+    checkStore();
+    const interval = setInterval(checkStore, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // 1. Initialize table & session
   useEffect(() => {
@@ -184,6 +203,11 @@ export default function CustomerOrderPage() {
     async (note: string) => {
       if (!tableNumber || !sessionId || cart.length === 0) return;
 
+      if (!isStoreOpen) {
+        alert('Quán hiện đang tạm đóng cửa. Không thể gửi order lúc này!');
+        return;
+      }
+
       setIsSubmitting(true);
 
       try {
@@ -218,7 +242,7 @@ export default function CustomerOrderPage() {
         setIsSubmitting(false);
       }
     },
-    [tableNumber, sessionId, cart]
+    [tableNumber, sessionId, cart, isStoreOpen]
   );
 
   // Filter items by active category
@@ -280,6 +304,21 @@ export default function CustomerOrderPage() {
         activeOrdersCount={activeOrdersCount}
         onOpenOrders={() => setOrdersOpen(true)}
       />
+
+      {/* Store Closed Alert Banner */}
+      {!isStoreOpen && (
+        <div className="max-w-md mx-auto px-4 pt-3">
+          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-3 shadow-xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+            <div>
+              <p className="font-extrabold text-sm text-rose-900">Quán hiện đang tạm đóng cửa</p>
+              <p className="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
+                Quán tạm ngừng nhận đơn trực tuyến. Quý khách có thể xem trước menu hoặc liên hệ trực tiếp nhân viên!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category Tabs */}
       <CategoryTabs

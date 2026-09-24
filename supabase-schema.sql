@@ -63,6 +63,16 @@ create table order_items (
     note text
 );
 
+-- store_settings (Quản lý trạng thái Đóng / Mở cửa)
+create table store_settings (
+    id text primary key default 'main',
+    is_open boolean default true,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Insert default store settings
+insert into store_settings (id, is_open) values ('main', true) on conflict (id) do nothing;
+
 
 -- 2. Setup Realtime publication
 alter publication supabase_realtime add table orders;
@@ -75,6 +85,7 @@ alter table restaurant_tables enable row level security;
 alter table sessions enable row level security;
 alter table orders enable row level security;
 alter table order_items enable row level security;
+alter table store_settings enable row level security;
 
 -- Policies allowing public read/write (MVP ONLY - In production, you'd secure this)
 create policy "Enable read access for all users" on menu_categories for select using (true);
@@ -88,6 +99,9 @@ create policy "Enable insert for all users" on orders for insert with check (tru
 create policy "Enable update for all users" on orders for update using (true);
 create policy "Enable read access for all users" on order_items for select using (true);
 create policy "Enable insert for all users" on order_items for insert with check (true);
+create policy "Enable read access for all users" on store_settings for select using (true);
+create policy "Enable update for all users" on store_settings for update using (true);
+create policy "Enable insert for all users" on store_settings for insert with check (true);
 
 
 -- 4. Seed Data

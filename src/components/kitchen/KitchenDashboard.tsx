@@ -7,6 +7,7 @@ import { playOrderChime } from '@/lib/audio';
 import { KitchenHeader } from '@/components/kitchen/KitchenHeader';
 import { KanbanColumn } from '@/components/kitchen/KanbanColumn';
 import { OrderCard } from '@/components/kitchen/OrderCard';
+import { DailyReceiptModal } from '@/components/kitchen/DailyReceiptModal';
 import { RefreshCw, Filter } from 'lucide-react';
 
 export const KitchenDashboard: React.FC = () => {
@@ -17,6 +18,8 @@ export const KitchenDashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTable, setSelectedTable] = useState<number | 'ALL'>('ALL');
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
+  const [isStoreOpen, setIsStoreOpen] = useState(true);
+  const [receiptOpen, setReceiptOpen] = useState(false);
 
   // Track known order IDs to avoid chiming on initial load or duplicates
   const knownOrderIds = useRef<Set<string>>(new Set());
@@ -47,9 +50,38 @@ export const KitchenDashboard: React.FC = () => {
     }
   }, []);
 
+  // ------- Store Open / Close State -------
+  const fetchStoreStatus = useCallback(async () => {
+    try {
+      const resp = await fetch('/api/store/status');
+      if (resp.ok) {
+        const data = await resp.json();
+        setIsStoreOpen(data.isOpen ?? true);
+      }
+    } catch (err) {
+      console.error('Fetch store status error:', err);
+    }
+  }, []);
+
+  const handleToggleStoreOpen = async () => {
+    const nextState = !isStoreOpen;
+    setIsStoreOpen(nextState);
+    try {
+      await fetch('/api/store/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOpen: nextState }),
+      });
+    } catch (err) {
+      console.error('Toggle store open error:', err);
+      fetchStoreStatus();
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+    fetchStoreStatus();
+  }, [fetchOrders, fetchStoreStatus]);
 
   // ------- Realtime Subscription via Supabase -------
   useEffect(() => {
@@ -218,6 +250,9 @@ export const KitchenDashboard: React.FC = () => {
         isMuted={isMuted}
         toggleMuted={() => setIsMuted((m) => !m)}
         connected={connected}
+        isStoreOpen={isStoreOpen}
+        onToggleStoreOpen={handleToggleStoreOpen}
+        onOpenReceipt={() => setReceiptOpen(true)}
       />
 
       {/* Toolbar */}
@@ -336,6 +371,12 @@ export const KitchenDashboard: React.FC = () => {
           ))}
         </KanbanColumn>
       </main>
+
+      {/* Daily Receipt Modal */}
+      <DailyReceiptModal
+        isOpen={receiptOpen}
+        onClose={() => setReceiptOpen(false)}
+      />
     </div>
   );
 };

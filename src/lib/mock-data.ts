@@ -156,12 +156,25 @@ export const INITIAL_TABLES: RestaurantTable[] = [
 const globalForOrders = globalThis as unknown as {
   mockOrders: import('@/types').Order[];
   mockOrderIdCounter: number;
+  isStoreOpen?: boolean;
 };
 
 if (!globalForOrders.mockOrders) {
   globalForOrders.mockOrders = [];
   globalForOrders.mockOrderIdCounter = 1;
+  globalForOrders.isStoreOpen = true;
 }
+
+if (globalForOrders.isStoreOpen === undefined) {
+  globalForOrders.isStoreOpen = true;
+}
+
+export const getStoreIsOpen = () => globalForOrders.isStoreOpen ?? true;
+
+export const setStoreIsOpen = (open: boolean) => {
+  globalForOrders.isStoreOpen = open;
+  return globalForOrders.isStoreOpen;
+};
 
 export const getMockOrders = () => globalForOrders.mockOrders;
 
@@ -186,3 +199,4 @@ export function getNextMockOrderId(): string {
   const idNum = String(globalForOrders.mockOrderIdCounter++).padStart(3, '0');
   return `ord-${idNum}`;
 }
+
