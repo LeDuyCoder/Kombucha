@@ -10,8 +10,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Vui lòng nhập mã PIN' }, { status: 400 });
     }
 
-    if (!verifyKitchenPin(pin.trim())) {
-      console.warn(`[Kitchen Login] Sai mã PIN. Đã nhận: "${pin}", Mã đúng mặc định: "${process.env.KITCHEN_PIN || '1234'}"`);
+    const isPinValid = await verifyKitchenPin(pin.trim());
+    if (!isPinValid) {
+      console.warn(`[Kitchen Login] Mã PIN nhập vào không chính xác.`);
       return NextResponse.json({ error: 'Mã PIN không đúng' }, { status: 401 });
     }
 

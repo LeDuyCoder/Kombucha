@@ -1,35 +1,71 @@
 import { SignJWT, jwtVerify } from 'jose';
-
-// Default PIN for kitchen access (Can be overridden by KITCHEN_PIN env)
-export const DEFAULT_KITCHEN_PIN = process.env.KITCHEN_PIN || '9999';
-
-// Default Password for Portal/Home access (Can be overridden by PORTAL_PASSWORD env)
-export const DEFAULT_PORTAL_PASSWORD = process.env.PORTAL_PASSWORD || process.env.ADMIN_PASSWORD || '9999';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { getStoreKitchenPin, setStoreKitchenPin } from '@/lib/mock-data';
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.KITCHEN_JWT_SECRET || 'order-menu-kitchen-secret-key-32-chars-long'
 );
 
 export const COOKIE_NAME = 'kitchen_auth_token';
-export const PORTAL_COOKIE_NAME = 'portal_auth_token';
 
 /**
- * Verify if the entered PIN matches the configured kitchen PIN.
+ * Dynamically fetch the configured kitchen PIN.
+ * Checks Supabase `store_settings.kitchen_pin` -> in-memory store -> env KITCHEN_PIN -> '9999'
  */
-export function verifyKitchenPin(pin: string): boolean {
-  return pin === DEFAULT_KITCHEN_PIN || pin === '9999';
+export async function getKitchenPin(): Promise<string> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('kitchen_pin')
+        .eq('id', 'main')
+        .maybeSingle();
+
+      if (!error && data?.kitchen_pin) {
+        return String(data.kitchen_pin);
+      }
+    } catch (err) {
+      console.warn('Supabase getKitchenPin error:', err);
+    }
+  }
+
+  return getStoreKitchenPin();
 }
 
 /**
- * Verify if the entered password matches the portal/home password.
+ * Dynamically update the kitchen PIN.
+ * Saves to in-memory store and Supabase `store_settings.kitchen_pin`.
  */
-export function verifyPortalPassword(password: string): boolean {
-  const trimmed = password.trim();
-  return (
-    trimmed === DEFAULT_PORTAL_PASSWORD ||
-    trimmed === '1234' ||
-    trimmed === 'admin123'
-  );
+export async function setKitchenPin(newPin: string): Promise<boolean> {
+  const cleanPin = newPin.trim();
+  setStoreKitchenPin(cleanPin);
+
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase
+        .from('store_settings')
+        .upsert({
+          id: 'main',
+          kitchen_pin: cleanPin,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (!error) return true;
+      console.warn('Update kitchen_pin in Supabase:', error);
+    } catch (err) {
+      console.warn('Supabase setKitchenPin error:', err);
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Verify if the entered PIN matches the dynamically configured kitchen PIN.
+ */
+export async function verifyKitchenPin(pin: string): Promise<boolean> {
+  const currentPin = await getKitchenPin();
+  return pin.trim() === currentPin;
 }
 
 /**
@@ -44,38 +80,12 @@ export async function createKitchenSession(): Promise<string> {
 }
 
 /**
- * Issue a signed JWT token valid for 7 days (Portal/Admin).
- */
-export async function createPortalSession(): Promise<string> {
-  return new SignJWT({ role: 'admin', authenticated: true })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(SECRET_KEY);
-}
-
-/**
  * Verify an incoming JWT token string for kitchen.
  */
 export async function verifyKitchenSession(token: string): Promise<boolean> {
   try {
     const { payload } = await jwtVerify(token, SECRET_KEY);
     return payload.role === 'kitchen' && payload.authenticated === true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Verify an incoming JWT token string for portal/admin.
- */
-export async function verifyPortalSession(token: string): Promise<boolean> {
-  try {
-    const { payload } = await jwtVerify(token, SECRET_KEY);
-    return (
-      (payload.role === 'admin' || payload.role === 'kitchen') &&
-      payload.authenticated === true
-    );
   } catch {
     return false;
   }

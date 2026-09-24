@@ -32,7 +32,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
                 'shrink-0 px-4 py-2 rounded-xl text-sm font-bold tracking-tight transition-all duration-200 active:scale-95',
                 activeCategory === cat.id
                   ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
               )}
             >
               {cat.name}

@@ -63,15 +63,16 @@ create table order_items (
     note text
 );
 
--- store_settings (Quản lý trạng thái Đóng / Mở cửa)
+-- store_settings (Quản lý trạng thái Đóng / Mở cửa & Mã PIN Bếp)
 create table store_settings (
     id text primary key default 'main',
     is_open boolean default true,
+    kitchen_pin text default '9999',
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- Insert default store settings
-insert into store_settings (id, is_open) values ('main', true) on conflict (id) do nothing;
+insert into store_settings (id, is_open, kitchen_pin) values ('main', true, '9999') on conflict (id) do nothing;
 
 
 -- 2. Setup Realtime publication
@@ -89,7 +90,14 @@ alter table store_settings enable row level security;
 
 -- Policies allowing public read/write (MVP ONLY - In production, you'd secure this)
 create policy "Enable read access for all users" on menu_categories for select using (true);
+create policy "Enable insert for all users" on menu_categories for insert with check (true);
+create policy "Enable update for all users" on menu_categories for update using (true);
+create policy "Enable delete for all users" on menu_categories for delete using (true);
+
 create policy "Enable read access for all users" on menu_items for select using (true);
+create policy "Enable insert for all users" on menu_items for insert with check (true);
+create policy "Enable update for all users" on menu_items for update using (true);
+create policy "Enable delete for all users" on menu_items for delete using (true);
 create policy "Enable read access for all users" on restaurant_tables for select using (true);
 create policy "Enable insert for all users" on restaurant_tables for insert with check (true);
 create policy "Enable update for all users" on restaurant_tables for update using (true);

@@ -152,8 +152,10 @@ export const INITIAL_TABLES: RestaurantTable[] = [
 const globalForOrders = globalThis as unknown as {
   mockOrders: import('@/types').Order[];
   mockTables: RestaurantTable[];
+  mockMenuItems: MenuItem[];
   mockOrderIdCounter: number;
   isStoreOpen?: boolean;
+  kitchenPin?: string;
 };
 
 if (!globalForOrders.mockOrders) {
@@ -166,9 +168,38 @@ if (!globalForOrders.mockTables) {
   globalForOrders.mockTables = [...INITIAL_TABLES];
 }
 
+if (!globalForOrders.mockMenuItems) {
+  globalForOrders.mockMenuItems = [...INITIAL_MENU_ITEMS];
+}
+
 if (globalForOrders.isStoreOpen === undefined) {
   globalForOrders.isStoreOpen = true;
 }
+
+export const getMockMenuItems = () => globalForOrders.mockMenuItems || INITIAL_MENU_ITEMS;
+
+export const addMockMenuItem = (item: MenuItem) => {
+  if (!globalForOrders.mockMenuItems) globalForOrders.mockMenuItems = [...INITIAL_MENU_ITEMS];
+  globalForOrders.mockMenuItems.push(item);
+  return item;
+};
+
+export const updateMockMenuItem = (id: string, updates: Partial<MenuItem>) => {
+  if (!globalForOrders.mockMenuItems) globalForOrders.mockMenuItems = [...INITIAL_MENU_ITEMS];
+  const idx = globalForOrders.mockMenuItems.findIndex((m) => m.id === id);
+  if (idx !== -1) {
+    globalForOrders.mockMenuItems[idx] = { ...globalForOrders.mockMenuItems[idx], ...updates };
+    return globalForOrders.mockMenuItems[idx];
+  }
+  return null;
+};
+
+export const deleteMockMenuItem = (id: string) => {
+  if (!globalForOrders.mockMenuItems) globalForOrders.mockMenuItems = [...INITIAL_MENU_ITEMS];
+  const initialLen = globalForOrders.mockMenuItems.length;
+  globalForOrders.mockMenuItems = globalForOrders.mockMenuItems.filter((m) => m.id !== id);
+  return globalForOrders.mockMenuItems.length < initialLen;
+};
 
 export const getMockTables = () => globalForOrders.mockTables || INITIAL_TABLES;
 
@@ -200,6 +231,13 @@ export const getStoreIsOpen = () => globalForOrders.isStoreOpen ?? true;
 export const setStoreIsOpen = (open: boolean) => {
   globalForOrders.isStoreOpen = open;
   return globalForOrders.isStoreOpen;
+};
+
+export const getStoreKitchenPin = () => globalForOrders.kitchenPin || process.env.KITCHEN_PIN || '9999';
+
+export const setStoreKitchenPin = (pin: string) => {
+  globalForOrders.kitchenPin = pin;
+  return globalForOrders.kitchenPin;
 };
 
 export const getMockOrders = () => globalForOrders.mockOrders;

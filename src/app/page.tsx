@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Coffee, ChefHat, QrCode, UtensilsCrossed, ArrowRight } from 'lucide-react';
+import { Coffee, ChefHat, QrCode, UtensilsCrossed, ArrowRight, KeyRound } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -112,6 +112,30 @@ export default function HomePage() {
             </div>
             <div className="mt-4 flex items-center text-xs font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
               <span>Quản lý món</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </div>
+          </Link>
+
+          {/* Settings & Password Management */}
+          <Link
+            href="/admin/settings"
+            className="group sm:col-span-2 p-5 rounded-2xl bg-white border border-stone-200 hover:border-amber-300 hover:shadow-md transition-all shadow-xs flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-stone-800 group-hover:text-amber-700 transition-colors">
+                  Cài Đặt &amp; Mật Khẩu Bếp
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Đổi mã PIN bảo mật cho Bếp (/kitchen) và trạng thái đóng/mở cửa quán.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center text-xs font-bold text-amber-600 group-hover:translate-x-1 transition-transform shrink-0">
+              <span>Cấu hình</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </div>
           </Link>

@@ -181,8 +181,8 @@ export default function KitchenLoginPage() {
           </button>
         </div>
 
-        <div className="mt-8 text-center text-xs font-semibold text-stone-400">
-          <p>Mặc định PIN: 9999</p>
+        <div className="mt-8 text-center text-xs font-medium text-stone-400">
+          <p>Vui lòng nhập mã PIN bảo mật của hệ thống để tiếp tục</p>
         </div>
       </div>
     </div>

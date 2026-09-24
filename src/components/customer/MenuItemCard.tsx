@@ -32,19 +32,19 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
     >
       {/* Top Part: Item Name & Description */}
       <div>
-        <div className="flex items-start justify-between gap-1.5">
-          <h3 className="font-extrabold text-stone-900 text-sm md:text-base leading-tight group-hover:text-blue-700 transition-colors">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-extrabold text-stone-900 text-base md:text-lg leading-snug group-hover:text-blue-700 transition-colors tracking-tight">
             {item.name}
           </h3>
           {quantityInCart > 0 && (
-            <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-black flex items-center justify-center shadow-xs">
+            <span className="shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
               {quantityInCart}
             </span>
           )}
         </div>
 
         {item.description && (
-          <p className="text-[11px] md:text-xs text-stone-500 mt-1.5 line-clamp-2 leading-relaxed font-medium">
+          <p className="text-xs md:text-sm text-stone-600 mt-1.5 line-clamp-2 leading-relaxed font-normal">
             {item.description}
           </p>
         )}
@@ -53,10 +53,10 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       {/* Bottom Part: Price & Add / Adjust Buttons */}
       <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
         <div>
-          <span className="text-[10px] text-stone-400 font-semibold block leading-none mb-0.5">
+          <span className="text-[11px] text-stone-500 font-bold block leading-none mb-1">
             Giá tiền
           </span>
-          <span className="font-black text-blue-700 text-sm md:text-base tracking-tight">
+          <span className="font-black text-blue-700 text-base md:text-lg tracking-tight font-mono">
             {formatCurrency(item.price)}
           </span>
         </div>

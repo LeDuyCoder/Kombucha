@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Coffee,
   Clock,
@@ -12,6 +13,7 @@ import {
   FileText,
   DoorOpen,
   DoorClosed,
+  KeyRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -152,6 +154,15 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
+
+        {/* Settings button */}
+        <Link
+          href="/admin/settings"
+          title="Cài đặt hệ thống & đổi mã PIN Bếp"
+          className="p-2 rounded-xl border border-stone-200 bg-stone-100 text-stone-600 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 transition-all duration-200 active:scale-95 shadow-xs"
+        >
+          <KeyRound className="w-4 h-4" />
+        </Link>
 
         {/* Logout button */}
         <button

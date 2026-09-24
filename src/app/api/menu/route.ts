@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { INITIAL_CATEGORIES, INITIAL_MENU_ITEMS } from '@/lib/mock-data';
+import { INITIAL_CATEGORIES, getMockMenuItems, addMockMenuItem, updateMockMenuItem } from '@/lib/mock-data';
 
 export async function GET() {
   try {
@@ -24,7 +24,7 @@ export async function GET() {
         console.error('Menu Fetch DB Error:', catError || itemsError);
         return NextResponse.json({
           categories: INITIAL_CATEGORIES,
-          items: INITIAL_MENU_ITEMS,
+          items: getMockMenuItems(),
         });
       }
 
@@ -41,48 +41,129 @@ export async function GET() {
 
     return NextResponse.json({
       categories: INITIAL_CATEGORIES,
-      items: INITIAL_MENU_ITEMS,
+      items: getMockMenuItems(),
     });
   } catch (error) {
     console.error('Menu API GET Error:', error);
     return NextResponse.json({
       categories: INITIAL_CATEGORIES,
-      items: INITIAL_MENU_ITEMS,
+      items: getMockMenuItems(),
     });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { name, price, category_id, description, image_url, available, sort_order } = body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return NextResponse.json({ error: 'Tên món không được để trống' }, { status: 400 });
+    }
+
+    const priceNum = Number(price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      return NextResponse.json({ error: 'Giá tiền không hợp lệ' }, { status: 400 });
+    }
+
+    const newItemData = {
+      name: name.trim(),
+      price: priceNum,
+      category_id: category_id || null,
+      description: description ? String(description).trim() : null,
+      image_url: image_url ? String(image_url).trim() : null,
+      available: available !== undefined ? Boolean(available) : true,
+      sort_order: sort_order ? Number(sort_order) : 0,
+    };
+
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .insert(newItemData)
+        .select(`
+          *,
+          menu_categories (
+            name
+          )
+        `)
+        .single();
+
+      if (error) {
+        console.error('Insert menu item error in Supabase:', error);
+        return NextResponse.json({ error: 'Lỗi thêm món: ' + error.message }, { status: 400 });
+      }
+
+      const formatted = {
+        ...data,
+        category_name: data.menu_categories?.name || 'Khác',
+      };
+
+      return NextResponse.json({ success: true, item: formatted });
+    }
+
+    // Mock mode
+    const cat = INITIAL_CATEGORIES.find((c) => c.id === category_id);
+    const mockItem = {
+      id: `m-${Date.now()}`,
+      ...newItemData,
+      category_name: cat ? cat.name : 'Khác',
+    };
+    addMockMenuItem(mockItem);
+
+    return NextResponse.json({ success: true, item: mockItem });
+  } catch (error) {
+    console.error('Menu API POST Error:', error);
+    return NextResponse.json({ error: 'Lỗi máy chủ' }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, available, price, name, description } = body;
+    const { id, available, price, name, description, category_id, image_url, sort_order } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Cần ID món' }, { status: 400 });
     }
 
-    if (isSupabaseConfigured) {
-      const updates: any = {};
-      if (typeof available === 'boolean') updates.available = available;
-      if (typeof price === 'number') updates.price = price;
-      if (name) updates.name = name;
-      if (description !== undefined) updates.description = description;
+    const updates: Record<string, any> = {};
+    if (typeof available === 'boolean') updates.available = available;
+    if (typeof price === 'number') updates.price = price;
+    if (name) updates.name = String(name).trim();
+    if (description !== undefined) updates.description = description ? String(description).trim() : null;
+    if (category_id !== undefined) updates.category_id = category_id || null;
+    if (image_url !== undefined) updates.image_url = image_url ? String(image_url).trim() : null;
+    if (sort_order !== undefined) updates.sort_order = Number(sort_order);
 
+    if (isSupabaseConfigured) {
       const { data, error } = await supabase
         .from('menu_items')
         .update(updates)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          menu_categories (
+            name
+          )
+        `)
         .single();
 
       if (error) {
-        return NextResponse.json({ error: 'Lỗi cập nhật món' }, { status: 500 });
+        console.error('Update menu item in Supabase error:', error);
+        return NextResponse.json({ error: 'Lỗi cập nhật món: ' + error.message }, { status: 500 });
       }
 
-      return NextResponse.json({ success: true, item: data });
+      const formatted = {
+        ...data,
+        category_name: data.menu_categories?.name || 'Khác',
+      };
+
+      return NextResponse.json({ success: true, item: formatted });
     }
 
-    return NextResponse.json({ success: true, item: { id, available, price } });
+    // Mock mode
+    const updated = updateMockMenuItem(id, updates);
+    return NextResponse.json({ success: true, item: updated || { id, ...updates } });
   } catch (error) {
     console.error('Menu API PATCH Error:', error);
     return NextResponse.json({ error: 'Lỗi máy chủ' }, { status: 500 });
