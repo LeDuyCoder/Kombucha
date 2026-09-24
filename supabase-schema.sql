@@ -91,6 +91,9 @@ alter table store_settings enable row level security;
 create policy "Enable read access for all users" on menu_categories for select using (true);
 create policy "Enable read access for all users" on menu_items for select using (true);
 create policy "Enable read access for all users" on restaurant_tables for select using (true);
+create policy "Enable insert for all users" on restaurant_tables for insert with check (true);
+create policy "Enable update for all users" on restaurant_tables for update using (true);
+create policy "Enable delete for all users" on restaurant_tables for delete using (true);
 create policy "Enable read access for all users" on sessions for select using (true);
 create policy "Enable insert for all users" on sessions for insert with check (true);
 create policy "Enable update for all users" on sessions for update using (true);
@@ -108,13 +111,9 @@ create policy "Enable insert for all users" on store_settings for insert with ch
 -- Truncate existing if re-running
 truncate table order_items, orders, sessions, menu_items, menu_categories, restaurant_tables cascade;
 
--- Insert Tables
+-- Insert Tables (Duy nhất Phòng 620)
 insert into restaurant_tables (table_number, qr_token) values
-(1, 'table-01-token'),
-(2, 'table-02-token'),
-(3, 'table-03-token'),
-(4, 'table-04-token'),
-(5, 'table-05-token');
+(620, 'table-620-token');
 
 -- Insert Categories
 with inserted_categories as (

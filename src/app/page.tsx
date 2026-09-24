@@ -22,7 +22,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Customer Order Page */}
           <Link
-            href="/order?table=5"
+            href="/order?table=620"
             className="group p-5 rounded-2xl bg-white border border-stone-200 hover:border-blue-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between"
           >
             <div className="space-y-3">
@@ -34,7 +34,7 @@ export default function HomePage() {
                   Trang Khách Đặt Món
                 </h3>
                 <p className="text-xs text-stone-500 mt-1">
-                  Mở menu với tư cách khách hàng ngồi tại Phòng 05.
+                  Mở menu với tư cách khách hàng ngồi tại Phòng 620.
                 </p>
               </div>
             </div>
@@ -119,17 +119,14 @@ export default function HomePage() {
 
         {/* Quick Demo Rooms */}
         <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs text-center space-y-2">
-          <p className="text-xs text-stone-500 font-medium">Truy cập nhanh menu từng phòng:</p>
+          <p className="text-xs text-stone-500 font-medium">Truy cập nhanh menu phòng:</p>
           <div className="flex justify-center gap-2 flex-wrap">
-            {[1, 2, 3, 4, 5].map((t) => (
-              <Link
-                key={t}
-                href={`/order?table=${t}`}
-                className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-700 border border-blue-200 transition-colors"
-              >
-                Phòng {String(t).padStart(2, '0')}
-              </Link>
-            ))}
+            <Link
+              href="/order?table=620"
+              className="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-700 border border-blue-200 transition-colors inline-flex items-center gap-1.5"
+            >
+              <span>Phòng 620</span>
+            </Link>
           </div>
         </div>
       </div>

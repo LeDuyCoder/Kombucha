@@ -144,17 +144,14 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
 ];
 
 export const INITIAL_TABLES: RestaurantTable[] = [
-  { id: 'tbl-1', table_number: 1, qr_token: 'table-01-token', active: true },
-  { id: 'tbl-2', table_number: 2, qr_token: 'table-02-token', active: true },
-  { id: 'tbl-3', table_number: 3, qr_token: 'table-03-token', active: true },
-  { id: 'tbl-4', table_number: 4, qr_token: 'table-04-token', active: true },
-  { id: 'tbl-5', table_number: 5, qr_token: 'table-05-token', active: true },
+  { id: 'tbl-620', table_number: 620, qr_token: 'table-620-token', active: true },
 ];
 
 // Shared global in-memory store for fallback / dev demo mode
 // Stored on globalThis to persist across Next.js dev route compilations
 const globalForOrders = globalThis as unknown as {
   mockOrders: import('@/types').Order[];
+  mockTables: RestaurantTable[];
   mockOrderIdCounter: number;
   isStoreOpen?: boolean;
 };
@@ -165,9 +162,38 @@ if (!globalForOrders.mockOrders) {
   globalForOrders.isStoreOpen = true;
 }
 
+if (!globalForOrders.mockTables) {
+  globalForOrders.mockTables = [...INITIAL_TABLES];
+}
+
 if (globalForOrders.isStoreOpen === undefined) {
   globalForOrders.isStoreOpen = true;
 }
+
+export const getMockTables = () => globalForOrders.mockTables || INITIAL_TABLES;
+
+export const addMockTable = (table: RestaurantTable) => {
+  if (!globalForOrders.mockTables) globalForOrders.mockTables = [...INITIAL_TABLES];
+  globalForOrders.mockTables.push(table);
+  return table;
+};
+
+export const updateMockTable = (id: string, updates: Partial<RestaurantTable>) => {
+  if (!globalForOrders.mockTables) globalForOrders.mockTables = [...INITIAL_TABLES];
+  const idx = globalForOrders.mockTables.findIndex((t) => t.id === id);
+  if (idx !== -1) {
+    globalForOrders.mockTables[idx] = { ...globalForOrders.mockTables[idx], ...updates };
+    return globalForOrders.mockTables[idx];
+  }
+  return null;
+};
+
+export const deleteMockTable = (id: string) => {
+  if (!globalForOrders.mockTables) globalForOrders.mockTables = [...INITIAL_TABLES];
+  const initialLength = globalForOrders.mockTables.length;
+  globalForOrders.mockTables = globalForOrders.mockTables.filter((t) => t.id !== id);
+  return globalForOrders.mockTables.length < initialLength;
+};
 
 export const getStoreIsOpen = () => globalForOrders.isStoreOpen ?? true;
 
