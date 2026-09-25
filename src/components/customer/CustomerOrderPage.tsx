@@ -423,7 +423,7 @@ export default function CustomerOrderPage() {
   }, []);
 
   // Invalid table
-  if (!tableParam || !Number(tableParam)) {
+  if (!tableParam || !tableParam.trim()) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 p-6">
         <div className="text-center space-y-4 max-w-xs">
@@ -435,7 +435,7 @@ export default function CustomerOrderPage() {
             Quét mã QR code trên bàn của bạn để bắt đầu đặt món.
           </p>
           <p className="text-xs text-stone-400">
-            URL cần chứa tham số <code className="bg-stone-200 px-1 rounded">?table=số_bàn</code>
+            URL cần chứa tham số <code className="bg-stone-200 px-1 rounded">?table=tên_phòng</code>
           </p>
         </div>
       </div>
