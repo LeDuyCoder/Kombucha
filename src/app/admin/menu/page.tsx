@@ -20,8 +20,63 @@ import {
   Image as ImageIcon,
   CheckCircle2,
   DollarSign,
-  Minus
+  Minus,
+  ChevronDown
 } from 'lucide-react';
+
+const CustomCategorySelect = ({ value, onChange, categories }: { value: string, onChange: (val: string) => void, categories: MenuCategory[] }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedCat = categories.find(c => c.id === value);
+
+  return (
+    <div ref={wrapperRef} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full bg-stone-50 border rounded-xl pl-3.5 pr-3 py-2.5 text-sm font-bold flex items-center justify-between transition-all ${
+          isOpen ? 'border-rose-500 bg-white ring-2 ring-rose-500/20' : 'border-stone-200 text-stone-900 hover:border-stone-300'
+        }`}
+      >
+        <span className="truncate">{selectedCat ? selectedCat.name : 'Chọn danh mục'}</span>
+        <ChevronDown className={`w-4 h-4 text-stone-500 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-rose-500' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 mt-1.5 w-full bg-white border border-stone-100 rounded-xl shadow-xl py-1.5 animate-in fade-in zoom-in-95 duration-200 max-h-60 overflow-y-auto">
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => {
+                onChange(c.id);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-3.5 py-2.5 text-sm font-bold transition-colors ${
+                value === c.id
+                  ? 'bg-rose-50 text-rose-700'
+                  : 'text-stone-700 hover:bg-stone-50'
+              }`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function AdminMenuPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -701,17 +756,11 @@ export default function AdminMenuPage() {
                     <label className="block text-xs font-bold text-stone-700 mb-1.5">
                       Danh mục
                     </label>
-                    <select
+                    <CustomCategorySelect
                       value={addCategoryId}
-                      onChange={(e) => setAddCategoryId(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
-                    >
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setAddCategoryId}
+                      categories={categories}
+                    />
                   </div>
                 </div>
 
@@ -918,17 +967,11 @@ export default function AdminMenuPage() {
                     <label className="block text-xs font-bold text-stone-700 mb-1.5">
                       Danh mục
                     </label>
-                    <select
+                    <CustomCategorySelect
                       value={editCategoryId}
-                      onChange={(e) => setEditCategoryId(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500"
-                    >
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setEditCategoryId}
+                      categories={categories}
+                    />
                   </div>
                 </div>
 
