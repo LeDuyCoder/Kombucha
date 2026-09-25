@@ -55,7 +55,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, price, category_id, description, image_url, available, stock_quantity, sort_order } = body;
+    const { name, price, original_price, category_id, description, image_url, available, stock_quantity, sort_order } = body;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ error: 'Tên món không được để trống' }, { status: 400 });
@@ -66,6 +66,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Giá tiền không hợp lệ' }, { status: 400 });
     }
 
+    const origPriceNum =
+      original_price === null || original_price === undefined || original_price === ''
+        ? null
+        : Math.max(0, Number(original_price));
+
     const stockVal =
       stock_quantity === null || stock_quantity === undefined || stock_quantity === ''
         ? null
@@ -74,6 +79,7 @@ export async function POST(req: NextRequest) {
     const newItemData = {
       name: name.trim(),
       price: priceNum,
+      original_price: origPriceNum,
       category_id: category_id || null,
       description: description ? String(description).trim() : null,
       image_url: image_url ? String(image_url).trim() : null,
@@ -126,7 +132,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, available, stock_quantity, price, name, description, category_id, image_url, sort_order } = body;
+    const { id, available, stock_quantity, price, original_price, name, description, category_id, image_url, sort_order } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Cần ID món' }, { status: 400 });
@@ -145,6 +151,12 @@ export async function PATCH(req: NextRequest) {
       }
     }
     if (typeof price === 'number') updates.price = price;
+    if (original_price !== undefined) {
+      updates.original_price =
+        original_price === null || original_price === ''
+          ? null
+          : Math.max(0, Number(original_price));
+    }
     if (name) updates.name = String(name).trim();
     if (description !== undefined) updates.description = description ? String(description).trim() : null;
     if (category_id !== undefined) updates.category_id = category_id || null;

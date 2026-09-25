@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { MenuItem } from '@/types';
 import { formatCurrency } from '@/lib/utils';
-import { Plus, Minus, Coffee } from 'lucide-react';
+import { Plus, Minus, Coffee, Tag } from 'lucide-react';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -101,9 +101,19 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
         {/* Bottom Row: Price & Action Stepper */}
         <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between gap-2">
-          <span className="font-black text-rose-600 text-sm sm:text-base tracking-tight font-mono">
-            {formatCurrency(item.price)}
-          </span>
+          <div className="flex flex-col justify-center">
+            <span className="font-black text-rose-600 text-sm sm:text-base tracking-tight font-mono leading-none">
+              {formatCurrency(item.price)}
+            </span>
+            {item.original_price && item.original_price > item.price && (
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-stone-400 line-through font-mono leading-none">
+                  {formatCurrency(item.original_price)}
+                </span>
+                <Tag className="w-2.5 h-2.5 text-rose-500 fill-rose-500/20" />
+              </div>
+            )}
+          </div>
 
           {/* Action Button */}
           {isOutOfStock ? (

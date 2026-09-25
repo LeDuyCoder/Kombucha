@@ -3,7 +3,7 @@
 import React from 'react';
 import { MenuItem } from '@/types';
 import { formatCurrency } from '@/lib/utils';
-import { X, Plus, Minus, Info } from 'lucide-react';
+import { X, Plus, Minus, Info, Tag } from 'lucide-react';
 
 interface MenuItemDetailModalProps {
   item: MenuItem;
@@ -62,9 +62,19 @@ export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
             </h2>
             <div className="shrink-0 text-right">
               <p className="text-[11px] text-stone-500 font-bold uppercase tracking-wider mb-0.5">Giá bán</p>
-              <p className="font-black text-rose-700 text-xl font-mono tracking-tight">
-                {formatCurrency(item.price)}
-              </p>
+              <div className="flex flex-col items-end">
+                <p className="font-black text-rose-700 text-xl font-mono tracking-tight leading-none">
+                  {formatCurrency(item.price)}
+                </p>
+                {item.original_price && item.original_price > item.price && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-xs text-stone-400 line-through font-mono">
+                      {formatCurrency(item.original_price)}
+                    </span>
+                    <Tag className="w-3 h-3 text-rose-500 fill-rose-500/20" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           

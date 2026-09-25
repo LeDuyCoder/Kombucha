@@ -161,10 +161,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         <h4 className="font-bold text-stone-900 text-sm truncate leading-snug">
                           {item.menuItem.name}
                         </h4>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-xs text-rose-600 font-extrabold font-mono">
                             {formatCurrency(item.menuItem.price)}
                           </span>
+                          {item.menuItem.original_price && item.menuItem.original_price > item.menuItem.price && (
+                            <span className="text-[10px] text-stone-400 line-through font-mono">
+                              {formatCurrency(item.menuItem.original_price)}
+                            </span>
+                          )}
                           {typeof maxStock === 'number' && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-stone-200/70 text-stone-600 font-medium">
                               Kho: {maxStock}

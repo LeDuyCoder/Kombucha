@@ -10,11 +10,17 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, price, category_id, description, image_url, available, stock_quantity, sort_order } = body;
+    const { name, price, original_price, category_id, description, image_url, available, stock_quantity, sort_order } = body;
 
     const updates: Record<string, any> = {};
     if (name !== undefined) updates.name = String(name).trim();
     if (price !== undefined) updates.price = Number(price);
+    if (original_price !== undefined) {
+      updates.original_price =
+        original_price === null || original_price === ''
+          ? null
+          : Math.max(0, Number(original_price));
+    }
     if (category_id !== undefined) updates.category_id = category_id || null;
     if (description !== undefined) updates.description = description ? String(description).trim() : null;
     if (image_url !== undefined) updates.image_url = image_url ? String(image_url).trim() : null;

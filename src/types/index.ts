@@ -20,6 +20,7 @@ export interface MenuItem {
   name: string;
   description?: string | null;
   price: number;
+  original_price?: number | null;
   image_url?: string | null;
   available: boolean;
   stock_quantity?: number | null;

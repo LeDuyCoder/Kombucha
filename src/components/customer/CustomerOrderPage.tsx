@@ -341,12 +341,57 @@ export default function CustomerOrderPage() {
     [tableNumber, sessionId, cart, isStoreOpen, loadMenu]
   );
 
-  // Filter items by active category
-  const filteredItems = useMemo(() => {
-    if (activeCategory === 'all') return menuItems.filter((i) => i.available);
-    return menuItems.filter(
-      (i) => i.category_id === activeCategory && i.available
+  const getCategoryPriority = (name: string) => {
+    const lower = (name || '').toLowerCase();
+    if (lower.includes('kombucha')) return 1;
+    if (lower.includes('trà') || lower.includes('tea')) return 2;
+    if (lower.includes('nước ngọt') || lower.includes('ngọt') || lower.includes('soda')) return 3;
+    return 99;
+  };
+
+  // Group items by category for 'all' tab or specific category tab
+  const groupedCategories = useMemo(() => {
+    // Sort categories explicitly: 1. KOMBUCHA, 2. TRÀ, 3. NƯỚC NGỌT
+    const sortedCats = [...categories].sort((a, b) => {
+      const pA = getCategoryPriority(a.name);
+      const pB = getCategoryPriority(b.name);
+      if (pA !== pB) return pA - pB;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+
+    if (activeCategory !== 'all') {
+      const cat = sortedCats.find((c) => c.id === activeCategory);
+      const items = menuItems.filter((i) => i.category_id === activeCategory && i.available);
+      return cat ? [{ category: cat, items }] : [];
+    }
+
+    // When 'all': group all items by sorted categories (Mục 1: KOMBUCHA, Mục 2: TRÀ, Mục 3: NƯỚC NGỌT)
+    const groups = sortedCats
+      .map((cat) => {
+        const items = menuItems.filter((i) => i.category_id === cat.id && i.available);
+        return { category: cat, items };
+      })
+      .filter((g) => g.items.length > 0);
+
+    // Any items without matched category
+    const uncategorizedItems = menuItems.filter(
+      (i) => i.available && (!i.category_id || !sortedCats.some((c) => c.id === i.category_id))
     );
+    if (uncategorizedItems.length > 0) {
+      groups.push({
+        category: { id: 'other', name: 'MÓN KHÁC', sort_order: 999 },
+        items: uncategorizedItems,
+      });
+    }
+
+    return groups;
+  }, [categories, menuItems, activeCategory]);
+
+  const totalServingCount = useMemo(() => {
+    if (activeCategory === 'all') {
+      return menuItems.filter((i) => i.available).length;
+    }
+    return menuItems.filter((i) => i.category_id === activeCategory && i.available).length;
   }, [menuItems, activeCategory]);
 
   // Build quantity lookup
@@ -361,6 +406,21 @@ export default function CustomerOrderPage() {
     () => orders.filter((o) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length,
     [orders]
   );
+
+  const handleSelectCategory = useCallback((catId: string) => {
+    setActiveCategory(catId);
+    // Smooth scroll back to top of menu content if scrolled down
+    const menuEl = document.getElementById('menu-main-content');
+    if (menuEl) {
+      const topOffset = menuEl.getBoundingClientRect().top + window.pageYOffset - 120;
+      if (window.pageYOffset > topOffset) {
+        window.scrollTo({
+          top: Math.max(0, topOffset),
+          behavior: 'smooth',
+        });
+      }
+    }
+  }, []);
 
   // Invalid table
   if (!tableParam || !Number(tableParam)) {
@@ -420,36 +480,80 @@ export default function CustomerOrderPage() {
       <CategoryTabs
         categories={categories}
         activeCategory={activeCategory}
-        onSelect={setActiveCategory}
+        onSelect={handleSelectCategory}
       />
 
       {/* Menu Items List */}
-      <main className="max-w-2xl mx-auto px-4 pt-4 mb-8">
+      <main id="menu-main-content" className="max-w-2xl mx-auto px-4 pt-4 mb-8">
         <div className="flex items-center justify-between pb-3 mb-1">
           <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
-            {filteredItems.length} món đang phục vụ
+            {totalServingCount} món đang phục vụ
           </p>
           <span className="text-[10px] text-stone-400 font-medium">Chạm vào món để xem chi tiết</span>
         </div>
 
-        {filteredItems.length === 0 ? (
+        {groupedCategories.length === 0 ? (
           <div className="text-center py-12 text-stone-400 animate-in fade-in duration-300">
             <p className="font-medium text-sm">Không có món nào trong danh mục này</p>
           </div>
         ) : (
           <div
             key={activeCategory}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in-50 duration-300 slide-in-from-bottom-2"
+            className="space-y-6 sm:space-y-7 animate-in fade-in-0 slide-in-from-bottom-2 duration-300 ease-out"
           >
-            {filteredItems.map((item) => (
-              <MenuItemCard
-                key={item.id}
-                item={item}
-                quantityInCart={cartQuantityMap.get(item.id) || 0}
-                onAddToCart={addToCart}
-                onRemoveFromCart={removeFromCart}
-                onViewDetail={setSelectedDetailItem}
-              />
+            {groupedCategories.map(({ category, items }, index) => (
+              <section key={category.id} id={`category-${category.id}`} className="space-y-3">
+                {/* Category Section Header */}
+                <div className="py-2 flex items-center justify-between gap-3 border-b border-stone-200/90">
+                  <div className="flex items-center gap-2 sm:gap-2.5">
+                    {activeCategory === 'all' && (
+                      <span className="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200/80 font-mono text-[11px] font-black shrink-0 tracking-tight">
+                        Mục {index + 1}
+                      </span>
+                    )}
+                    <h2 className="text-sm sm:text-base font-black text-stone-900 tracking-tight uppercase">
+                      {category.name}
+                    </h2>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200/80">
+                      {items.length} món
+                    </span>
+                  </div>
+
+                  {activeCategory === 'all' && (
+                    <button
+                      onClick={() => handleSelectCategory(category.id)}
+                      className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-0.5 cursor-pointer py-1 px-2 rounded-lg hover:bg-rose-50/60 transition-colors"
+                      title={`Chỉ xem danh mục ${category.name}`}
+                    >
+                      <span>Xem riêng</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Items Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {items.map((item, itemIdx) => {
+                    // Calculate a stagger delay for smooth sequential appearance
+                    const staggerDelay = (index * 5 + itemIdx) * 40;
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className="animate-card-enter"
+                        style={{ animationDelay: `${staggerDelay}ms` }}
+                      >
+                        <MenuItemCard
+                          item={item}
+                          quantityInCart={cartQuantityMap.get(item.id) || 0}
+                          onAddToCart={addToCart}
+                          onRemoveFromCart={removeFromCart}
+                          onViewDetail={setSelectedDetailItem}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             ))}
           </div>
         )}

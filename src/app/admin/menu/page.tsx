@@ -40,6 +40,8 @@ export default function AdminMenuPage() {
   const [addAvailable, setAddAvailable] = useState(true);
   const [addIsUnlimitedStock, setAddIsUnlimitedStock] = useState(true);
   const [addStockQuantity, setAddStockQuantity] = useState('');
+  const [addHasDiscount, setAddHasDiscount] = useState(false);
+  const [addOriginalPrice, setAddOriginalPrice] = useState('');
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState('');
 
@@ -53,6 +55,8 @@ export default function AdminMenuPage() {
   const [editAvailable, setEditAvailable] = useState(true);
   const [editIsUnlimitedStock, setEditIsUnlimitedStock] = useState(true);
   const [editStockQuantity, setEditStockQuantity] = useState('');
+  const [editHasDiscount, setEditHasDiscount] = useState(false);
+  const [editOriginalPrice, setEditOriginalPrice] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -202,6 +206,7 @@ export default function AdminMenuPage() {
           image_url: addImageUrl.trim() || null,
           available: addAvailable,
           stock_quantity: addIsUnlimitedStock ? null : Number(addStockQuantity) || 0,
+          original_price: addHasDiscount && addOriginalPrice ? Number(addOriginalPrice) : null,
         }),
       });
 
@@ -215,6 +220,8 @@ export default function AdminMenuPage() {
         setAddAvailable(true);
         setAddIsUnlimitedStock(true);
         setAddStockQuantity('');
+        setAddHasDiscount(false);
+        setAddOriginalPrice('');
         await fetchMenu();
       } else {
         setAddError(res.error || 'Lỗi thêm món mới');
@@ -243,6 +250,9 @@ export default function AdminMenuPage() {
       setEditIsUnlimitedStock(false);
       setEditStockQuantity(String(item.stock_quantity));
     }
+    
+    setEditHasDiscount(Boolean(item.original_price && item.original_price > item.price));
+    setEditOriginalPrice(item.original_price ? String(item.original_price) : '');
     setEditError('');
   };
 
@@ -276,6 +286,7 @@ export default function AdminMenuPage() {
           image_url: editImageUrl.trim() || null,
           available: editAvailable,
           stock_quantity: editIsUnlimitedStock ? null : Number(editStockQuantity) || 0,
+          original_price: editHasDiscount && editOriginalPrice ? Number(editOriginalPrice) : null,
         }),
       });
 
@@ -510,8 +521,13 @@ export default function AdminMenuPage() {
                         </p>
                       )}
 
-                      <div className="text-sm font-black text-rose-700 mt-1">
-                        {formatCurrency(item.price)}
+                      <div className="text-sm font-black text-rose-700 mt-1 flex items-center gap-2">
+                        <span>{formatCurrency(item.price)}</span>
+                        {item.original_price && item.original_price > item.price && (
+                          <span className="text-[10px] text-stone-400 line-through font-medium">
+                            {formatCurrency(item.original_price)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -699,6 +715,47 @@ export default function AdminMenuPage() {
                   </div>
                 </div>
 
+                {/* Discount Section Add Modal */}
+                <div className="p-3.5 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-rose-800 block">Chương trình Giảm giá</span>
+                      <span className="text-[11px] text-rose-600/80 font-medium">Bật để hiển thị giá gốc gạch ngang</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={addHasDiscount}
+                        onChange={(e) => setAddHasDiscount(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-stone-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                    </label>
+                  </div>
+
+                  {addHasDiscount && (
+                    <div className="pt-3 border-t border-rose-100 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-rose-800">
+                        Giá gốc trước khi giảm (VNĐ):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        placeholder="vd: 45000"
+                        value={addOriginalPrice}
+                        onChange={(e) => setAddOriginalPrice(e.target.value)}
+                        className="w-full bg-white border border-rose-200 rounded-xl px-3.5 py-2 text-sm text-stone-900 font-bold focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
+                      />
+                      {addPrice && addOriginalPrice && Number(addOriginalPrice) > Number(addPrice) && (
+                        <p className="text-[10px] text-rose-600 font-medium mt-1">
+                          Hiển thị nổi bật mức giảm: {Math.round(((Number(addOriginalPrice) - Number(addPrice)) / Number(addOriginalPrice)) * 100)}%
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-1.5">
                     Mô tả món
@@ -873,6 +930,47 @@ export default function AdminMenuPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                {/* Discount Section Edit Modal */}
+                <div className="p-3.5 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-rose-800 block">Chương trình Giảm giá</span>
+                      <span className="text-[11px] text-rose-600/80 font-medium">Bật để hiển thị giá gốc gạch ngang</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editHasDiscount}
+                        onChange={(e) => setEditHasDiscount(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-stone-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                    </label>
+                  </div>
+
+                  {editHasDiscount && (
+                    <div className="pt-3 border-t border-rose-100 flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-rose-800">
+                        Giá gốc trước khi giảm (VNĐ):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        placeholder="vd: 45000"
+                        value={editOriginalPrice}
+                        onChange={(e) => setEditOriginalPrice(e.target.value)}
+                        className="w-full bg-white border border-rose-200 rounded-xl px-3.5 py-2 text-sm text-stone-900 font-bold focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
+                      />
+                      {editPrice && editOriginalPrice && Number(editOriginalPrice) > Number(editPrice) && (
+                        <p className="text-[10px] text-rose-600 font-medium mt-1">
+                          Hiển thị nổi bật mức giảm: {Math.round(((Number(editOriginalPrice) - Number(editPrice)) / Number(editOriginalPrice)) * 100)}%
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
