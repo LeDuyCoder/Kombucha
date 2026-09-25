@@ -60,39 +60,44 @@ export const KitchenHeader: React.FC<KitchenHeaderProps> = ({
 
   return (
     <header className="flex-none bg-white border-b border-stone-200 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between shadow-2xs z-20 gap-3">
-      {/* Left: Logo & Brand */}
-      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-        <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-2xs shrink-0 border border-stone-200">
-          <Image
-            src="/logo.jpg"
-            alt="Logo"
-            width={40}
-            height={40}
-            className="w-full h-full object-cover"
-            priority
-          />
+      {/* Left: Logo, Brand & Clock (Grouped in the left corner) */}
+      <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-2xs shrink-0 border border-stone-200">
+            <Image
+              src="/logo.jpg"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-stone-900 font-bold text-sm sm:text-base leading-tight tracking-tight whitespace-nowrap">
+              Bếp – Kombucha &amp; Tea
+            </h1>
+            <p className="text-stone-500 text-[10px] sm:text-xs font-medium whitespace-nowrap hidden sm:block">
+              Kitchen Display System
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h1 className="text-stone-900 font-bold text-sm sm:text-base leading-tight tracking-tight whitespace-nowrap">
-            Bếp – Kombucha &amp; Tea
-          </h1>
-          <p className="text-stone-500 text-[10px] sm:text-xs font-medium whitespace-nowrap hidden sm:block">
-            Kitchen Display System
-          </p>
-        </div>
-      </div>
 
-      {/* Center: Clock (In-flow flex layout to guarantee zero overlap) */}
-      <div className="flex-1 hidden md:flex flex-col items-center justify-center px-2 text-center pointer-events-none min-w-0">
-        <div className="flex items-center gap-1.5 text-stone-800 justify-center">
+        {/* Divider */}
+        <div className="w-px h-7 bg-stone-200 hidden md:block" />
+
+        {/* Clock & Date Badge */}
+        <div className="hidden md:flex items-center gap-2 bg-stone-50 border border-stone-200/80 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl shadow-2xs">
           <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-          <span className="text-lg sm:text-xl font-mono font-bold tabular-nums tracking-wider whitespace-nowrap">
-            {timeStr}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xs sm:text-sm font-mono font-bold text-stone-800 leading-none tabular-nums tracking-wide">
+              {timeStr}
+            </span>
+            <span className="text-[10px] text-stone-500 font-medium capitalize mt-0.5 leading-none">
+              {dateStr}
+            </span>
+          </div>
         </div>
-        <p className="text-stone-500 text-[11px] text-center capitalize font-medium whitespace-nowrap truncate max-w-full">
-          {dateStr}
-        </p>
       </div>
 
       {/* Right: Store Toggle, Receipt, Audio, Logout */}
