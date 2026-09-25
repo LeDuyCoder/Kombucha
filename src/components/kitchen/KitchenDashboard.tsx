@@ -7,6 +7,7 @@ import { playOrderChime } from '@/lib/audio';
 import { KitchenHeader } from '@/components/kitchen/KitchenHeader';
 import { KanbanColumn } from '@/components/kitchen/KanbanColumn';
 import { OrderCard } from '@/components/kitchen/OrderCard';
+import { OrderSelectionFooter } from '@/components/kitchen/OrderSelectionFooter';
 import { DailyReceiptModal } from '@/components/kitchen/DailyReceiptModal';
 import { CustomerFeedbackModal } from '@/components/kitchen/CustomerFeedbackModal';
 import { RefreshCw, Filter, Calendar } from 'lucide-react';
@@ -23,6 +24,10 @@ export const KitchenDashboard: React.FC = () => {
   const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  // Selection states
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [batchUpdating, setBatchUpdating] = useState(false);
 
   // Date Filter: defaults to today
   const todayStr = useMemo(() => {
@@ -293,6 +298,95 @@ export const KitchenDashboard: React.FC = () => {
     });
   }, [orders, selectedTable, selectedDate]);
 
+  // Derived selection data
+  const handleSelectAll = useCallback(() => {
+    const allFilteredIds = filteredOrders.map((o) => o.id);
+    setSelectedOrderIds((prev) => {
+      const areAllSelected = allFilteredIds.length > 0 && allFilteredIds.every((id) => prev.has(id));
+      if (areAllSelected) return new Set();
+      return new Set(allFilteredIds);
+    });
+  }, [filteredOrders]);
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedOrderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedOrderIds(new Set());
+  }, []);
+
+  const handleSelectColumn = useCallback((columnOrders: Order[]) => {
+    const columnIds = columnOrders.map((o) => o.id);
+    setSelectedOrderIds((prev) => {
+      const areAllSelected = columnIds.length > 0 && columnIds.every((id) => prev.has(id));
+      const next = new Set(prev);
+      if (areAllSelected) {
+        columnIds.forEach((id) => next.delete(id));
+      } else {
+        columnIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }, []);
+
+  const handleBatchUpdateStatus = useCallback(
+    async (newStatus: OrderStatus) => {
+      if (selectedOrderIds.size === 0) return;
+      try {
+        setBatchUpdating(true);
+        const idsToUpdate = Array.from(selectedOrderIds);
+
+        // Optimistic UI Update
+        setOrders((prev) =>
+          prev.map((o) =>
+            selectedOrderIds.has(o.id)
+              ? { ...o, status: newStatus, updated_at: new Date().toISOString() }
+              : o
+          )
+        );
+
+        // Clear selection
+        setSelectedOrderIds(new Set());
+
+        await Promise.all(
+          idsToUpdate.map((id) =>
+            fetch(`/api/orders/${encodeURIComponent(id)}/status`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: newStatus }),
+            })
+          )
+        );
+
+        await fetchOrders();
+      } catch (err) {
+        console.error('Batch update status error:', err);
+      } finally {
+        setBatchUpdating(false);
+      }
+    },
+    [selectedOrderIds, fetchOrders]
+  );
+
+  const selectedOrders = useMemo(
+    () => orders.filter((o) => selectedOrderIds.has(o.id)),
+    [orders, selectedOrderIds]
+  );
+  const selectedTotalAmount = useMemo(
+    () => selectedOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0),
+    [selectedOrders]
+  );
+  const isAllSelected = useMemo(
+    () => filteredOrders.length > 0 && filteredOrders.every((o) => selectedOrderIds.has(o.id)),
+    [filteredOrders, selectedOrderIds]
+  );
+
   // ------- Dynamic Room List -------
   const roomNumbers = useMemo(() => {
     const set = new Set<string | number>();
@@ -375,7 +469,7 @@ export const KitchenDashboard: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-stone-100 flex flex-col overflow-hidden text-stone-900 font-sans">
+    <div className="h-screen bg-stone-100 flex flex-col overflow-hidden text-stone-900 font-sans pb-[100px] sm:pb-24">
       {/* Header */}
       <KitchenHeader
         isMuted={isMuted}
@@ -563,6 +657,8 @@ export const KitchenDashboard: React.FC = () => {
             title="Chờ tiếp nhận"
             count={waitingOrders.length}
             statusColor="waiting"
+            onSelectColumn={() => handleSelectColumn(waitingOrders)}
+            isColumnSelected={waitingOrders.length > 0 && waitingOrders.every((o) => selectedOrderIds.has(o.id))}
           >
             {waitingOrders.map((order) => (
               <OrderCard
@@ -570,6 +666,8 @@ export const KitchenDashboard: React.FC = () => {
                 order={order}
                 onUpdateStatus={handleUpdateStatus}
                 isUpdating={updatingIds.has(order.id)}
+                isSelected={selectedOrderIds.has(order.id)}
+                onSelectToggle={handleToggleSelect}
               />
             ))}
           </KanbanColumn>
@@ -580,6 +678,8 @@ export const KitchenDashboard: React.FC = () => {
             title="Đang làm"
             count={preparingOrders.length}
             statusColor="preparing"
+            onSelectColumn={() => handleSelectColumn(preparingOrders)}
+            isColumnSelected={preparingOrders.length > 0 && preparingOrders.every((o) => selectedOrderIds.has(o.id))}
           >
             {preparingOrders.map((order) => (
               <OrderCard
@@ -587,6 +687,8 @@ export const KitchenDashboard: React.FC = () => {
                 order={order}
                 onUpdateStatus={handleUpdateStatus}
                 isUpdating={updatingIds.has(order.id)}
+                isSelected={selectedOrderIds.has(order.id)}
+                onSelectToggle={handleToggleSelect}
               />
             ))}
           </KanbanColumn>
@@ -597,6 +699,8 @@ export const KitchenDashboard: React.FC = () => {
             title="Sẵn sàng phục vụ"
             count={readyOrders.length}
             statusColor="ready"
+            onSelectColumn={() => handleSelectColumn(readyOrders)}
+            isColumnSelected={readyOrders.length > 0 && readyOrders.every((o) => selectedOrderIds.has(o.id))}
           >
             {readyOrders.map((order) => (
               <OrderCard
@@ -604,6 +708,8 @@ export const KitchenDashboard: React.FC = () => {
                 order={order}
                 onUpdateStatus={handleUpdateStatus}
                 isUpdating={updatingIds.has(order.id)}
+                isSelected={selectedOrderIds.has(order.id)}
+                onSelectToggle={handleToggleSelect}
               />
             ))}
           </KanbanColumn>
@@ -614,6 +720,8 @@ export const KitchenDashboard: React.FC = () => {
             title="Hoàn thành"
             count={completedOrders.length}
             statusColor="completed"
+            onSelectColumn={() => handleSelectColumn(completedOrders)}
+            isColumnSelected={completedOrders.length > 0 && completedOrders.every((o) => selectedOrderIds.has(o.id))}
           >
             {completedOrders.map((order) => (
               <OrderCard
@@ -621,6 +729,8 @@ export const KitchenDashboard: React.FC = () => {
                 order={order}
                 onUpdateStatus={handleUpdateStatus}
                 isUpdating={updatingIds.has(order.id)}
+                isSelected={selectedOrderIds.has(order.id)}
+                onSelectToggle={handleToggleSelect}
               />
             ))}
           </KanbanColumn>
@@ -634,6 +744,8 @@ export const KitchenDashboard: React.FC = () => {
           title="Chờ tiếp nhận"
           count={waitingOrders.length}
           statusColor="waiting"
+          onSelectColumn={() => handleSelectColumn(waitingOrders)}
+          isColumnSelected={waitingOrders.length > 0 && waitingOrders.every((o) => selectedOrderIds.has(o.id))}
         >
           {waitingOrders.map((order) => (
             <OrderCard
@@ -641,6 +753,8 @@ export const KitchenDashboard: React.FC = () => {
               order={order}
               onUpdateStatus={handleUpdateStatus}
               isUpdating={updatingIds.has(order.id)}
+              isSelected={selectedOrderIds.has(order.id)}
+              onSelectToggle={handleToggleSelect}
             />
           ))}
         </KanbanColumn>
@@ -650,6 +764,8 @@ export const KitchenDashboard: React.FC = () => {
           title="Đang làm"
           count={preparingOrders.length}
           statusColor="preparing"
+          onSelectColumn={() => handleSelectColumn(preparingOrders)}
+          isColumnSelected={preparingOrders.length > 0 && preparingOrders.every((o) => selectedOrderIds.has(o.id))}
         >
           {preparingOrders.map((order) => (
             <OrderCard
@@ -657,6 +773,8 @@ export const KitchenDashboard: React.FC = () => {
               order={order}
               onUpdateStatus={handleUpdateStatus}
               isUpdating={updatingIds.has(order.id)}
+              isSelected={selectedOrderIds.has(order.id)}
+              onSelectToggle={handleToggleSelect}
             />
           ))}
         </KanbanColumn>
@@ -666,6 +784,8 @@ export const KitchenDashboard: React.FC = () => {
           title="Sẵn sàng phục vụ"
           count={readyOrders.length}
           statusColor="ready"
+          onSelectColumn={() => handleSelectColumn(readyOrders)}
+          isColumnSelected={readyOrders.length > 0 && readyOrders.every((o) => selectedOrderIds.has(o.id))}
         >
           {readyOrders.map((order) => (
             <OrderCard
@@ -673,6 +793,8 @@ export const KitchenDashboard: React.FC = () => {
               order={order}
               onUpdateStatus={handleUpdateStatus}
               isUpdating={updatingIds.has(order.id)}
+              isSelected={selectedOrderIds.has(order.id)}
+              onSelectToggle={handleToggleSelect}
             />
           ))}
         </KanbanColumn>
@@ -682,6 +804,8 @@ export const KitchenDashboard: React.FC = () => {
           title="Hoàn thành"
           count={completedOrders.length}
           statusColor="completed"
+          onSelectColumn={() => handleSelectColumn(completedOrders)}
+          isColumnSelected={completedOrders.length > 0 && completedOrders.every((o) => selectedOrderIds.has(o.id))}
         >
           {completedOrders.map((order) => (
             <OrderCard
@@ -689,10 +813,25 @@ export const KitchenDashboard: React.FC = () => {
               order={order}
               onUpdateStatus={handleUpdateStatus}
               isUpdating={updatingIds.has(order.id)}
+              isSelected={selectedOrderIds.has(order.id)}
+              onSelectToggle={handleToggleSelect}
             />
           ))}
         </KanbanColumn>
       </main>
+
+      {/* Order Selection & Total Amount Footer */}
+      <OrderSelectionFooter
+        selectedCount={selectedOrderIds.size}
+        totalAmount={selectedTotalAmount}
+        selectedOrders={selectedOrders}
+        onClearSelection={handleClearSelection}
+        onSelectAll={handleSelectAll}
+        isAllSelected={isAllSelected}
+        totalOrdersCount={filteredOrders.length}
+        onBatchUpdateStatus={handleBatchUpdateStatus}
+        isUpdating={batchUpdating}
+      />
 
       {/* Daily Receipt Modal */}
       <DailyReceiptModal

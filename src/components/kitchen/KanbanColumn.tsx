@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { CheckSquare, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ColumnStatusColor = 'waiting' | 'preparing' | 'ready' | 'completed';
@@ -10,6 +11,8 @@ interface KanbanColumnProps {
   count: number;
   statusColor: ColumnStatusColor;
   children: React.ReactNode;
+  onSelectColumn?: () => void;
+  isColumnSelected?: boolean;
 }
 
 const colorMap: Record<
@@ -57,6 +60,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   count,
   statusColor,
   children,
+  onSelectColumn,
+  isColumnSelected = false,
 }) => {
   const styles = colorMap[statusColor];
 
@@ -70,6 +75,19 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       {/* Column Header */}
       <div className={cn('px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between', styles.headerBg)}>
         <div className="flex items-center gap-2">
+          {onSelectColumn && count > 0 && (
+            <button
+              onClick={onSelectColumn}
+              className="w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-900 transition-colors shrink-0"
+              title={isColumnSelected ? 'Bỏ chọn cả cột' : 'Chọn tất cả cột này'}
+            >
+              {isColumnSelected ? (
+                <CheckSquare className="w-4 h-4 fill-white stroke-[2.5]" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+            </button>
+          )}
           <span className={cn('w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full animate-pulse', styles.accentDot)} />
           <h2 className="font-bold text-stone-900 text-xs sm:text-sm tracking-tight">{title}</h2>
         </div>
