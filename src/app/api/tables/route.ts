@@ -44,29 +44,30 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tableNumber } = body;
 
-    const num = Number(tableNumber);
-    if (!tableNumber || isNaN(num) || num <= 0) {
-      return NextResponse.json({ error: 'Số phòng không hợp lệ' }, { status: 400 });
+    const rawVal = String(tableNumber || '').trim();
+    if (!rawVal) {
+      return NextResponse.json({ error: 'Tên hoặc số phòng không hợp lệ' }, { status: 400 });
     }
 
-    const qrToken = `table-${String(num).padStart(2, '0')}-token`;
+    const cleanSlug = rawVal.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'room';
+    const qrToken = `table-${cleanSlug}-${Date.now().toString(36)}`;
 
     // 1. Try Supabase if configured
     if (isSupabaseConfigured) {
       const { data: existing } = await supabase
         .from('restaurant_tables')
         .select('id')
-        .eq('table_number', num)
+        .eq('table_number', rawVal)
         .maybeSingle();
 
       if (existing) {
-        return NextResponse.json({ error: `Phòng ${num} đã tồn tại trong hệ thống` }, { status: 400 });
+        return NextResponse.json({ error: `Phòng "${rawVal}" đã tồn tại trong hệ thống` }, { status: 400 });
       }
 
       const { data, error } = await supabase
         .from('restaurant_tables')
         .insert({
-          table_number: num,
+          table_number: rawVal,
           qr_token: qrToken,
           active: true,
         })
@@ -82,14 +83,14 @@ export async function POST(req: NextRequest) {
 
     // 2. Try direct PostgreSQL
     try {
-      const existing = await query('SELECT id FROM restaurant_tables WHERE table_number = $1', [num]);
+      const existing = await query('SELECT id FROM restaurant_tables WHERE table_number = $1', [rawVal]);
       if (existing.rows && existing.rows.length > 0) {
-        return NextResponse.json({ error: `Phòng ${num} đã tồn tại trong hệ thống` }, { status: 400 });
+        return NextResponse.json({ error: `Phòng "${rawVal}" đã tồn tại trong hệ thống` }, { status: 400 });
       }
 
       const inserted = await query(
         'INSERT INTO restaurant_tables (table_number, qr_token, active) VALUES ($1, $2, true) RETURNING *',
-        [num, qrToken]
+        [rawVal, qrToken]
       );
       if (inserted.rows && inserted.rows.length > 0) {
         return NextResponse.json({ success: true, table: inserted.rows[0] });
@@ -100,13 +101,13 @@ export async function POST(req: NextRequest) {
 
     // 3. Mock fallback
     const mockList = getMockTables();
-    if (mockList.some((t) => t.table_number === num)) {
-      return NextResponse.json({ error: `Phòng ${num} đã tồn tại trong hệ thống` }, { status: 400 });
+    if (mockList.some((t) => String(t.table_number).toLowerCase() === rawVal.toLowerCase())) {
+      return NextResponse.json({ error: `Phòng "${rawVal}" đã tồn tại trong hệ thống` }, { status: 400 });
     }
 
     const newTable = {
-      id: `tbl-${num}-${Date.now()}`,
-      table_number: num,
+      id: `tbl-${cleanSlug}-${Date.now()}`,
+      table_number: rawVal,
       qr_token: qrToken,
       active: true,
     };

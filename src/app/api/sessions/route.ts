@@ -19,11 +19,11 @@ export async function POST(req: NextRequest) {
       const { data: tableData, error: tableError } = await supabase
         .from('restaurant_tables')
         .select('id, table_number')
-        .eq('table_number', Number(tableNumber))
+        .eq('table_number', tableNumber)
         .single();
 
       if (tableError || !tableData) {
-        return NextResponse.json({ error: `Bàn số ${tableNumber} không tồn tại trong hệ thống` }, { status: 404 });
+        return NextResponse.json({ error: `Phòng ${tableNumber} không tồn tại trong hệ thống` }, { status: 404 });
       }
 
       // 2. Check if this session token already exists and is active
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         session: mockSession,
-        table: { id: `tbl-${tableNumber}`, table_number: Number(tableNumber) },
+        table: { id: `tbl-${tableNumber}`, table_number: tableNumber },
       });
     }
   } catch (error) {

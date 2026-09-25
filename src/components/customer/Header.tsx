@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { ClipboardList } from 'lucide-react';
 
 interface HeaderProps {
-  tableNumber: number | null;
+  tableNumber: string | number | null;
   sessionToken: string | null;
   activeOrdersCount: number;
   onOpenOrders: () => void;
@@ -17,6 +17,14 @@ export const CustomerHeader: React.FC<HeaderProps> = ({
   activeOrdersCount,
   onOpenOrders,
 }) => {
+  const displayRoom = (() => {
+    if (tableNumber === null) return '';
+    const str = String(tableNumber).trim();
+    if (/^phòng/i.test(str)) return str;
+    if (/^\d+$/.test(str)) return `Phòng ${str.padStart(2, '0')}`;
+    return `Phòng ${str}`;
+  })();
+
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs transition-all">
       <div className="max-w-2xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
@@ -49,7 +57,7 @@ export const CustomerHeader: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {tableNumber !== null && (
             <div className="bg-rose-50 text-rose-800 border border-rose-200/80 px-2.5 py-1 sm:px-3 rounded-xl text-[11px] sm:text-xs font-black tracking-tight whitespace-nowrap shadow-2xs">
-              Phòng {String(tableNumber).padStart(2, '0')}
+              {displayRoom}
             </div>
           )}
 

@@ -26,7 +26,7 @@ create table menu_items (
 -- restaurant_tables
 create table restaurant_tables (
     id uuid default uuid_generate_v4() primary key,
-    table_number integer not null unique,
+    table_number text not null unique,
     qr_token text not null unique,
     active boolean default true
 );

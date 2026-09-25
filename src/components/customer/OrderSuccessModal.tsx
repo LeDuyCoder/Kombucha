@@ -9,7 +9,7 @@ interface OrderSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   order: Order | null;
-  tableNumber: number | null;
+  tableNumber: string | number | null;
 }
 
 export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
@@ -19,6 +19,14 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
   tableNumber,
 }) => {
   if (!isOpen || !order) return null;
+
+  const displayRoom = (() => {
+    if (!tableNumber) return '--';
+    const str = String(tableNumber).trim();
+    if (/^phòng/i.test(str)) return str.replace(/^phòng\s*/i, '');
+    if (/^\d+$/.test(str)) return str.padStart(2, '0');
+    return str;
+  })();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs animate-in fade-in">
@@ -38,7 +46,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
           <div className="flex justify-between text-sm">
             <span className="text-stone-500">Phòng</span>
             <span className="font-bold text-stone-900">
-              {String(tableNumber || 0).padStart(2, '0')}
+              {displayRoom}
             </span>
           </div>
           <div className="flex justify-between text-sm">

@@ -31,7 +31,7 @@ create table if not exists menu_items (
 
 create table if not exists restaurant_tables (
     id uuid default gen_random_uuid() primary key,
-    table_number integer not null unique,
+    table_number text not null unique,
     qr_token text not null unique,
     active boolean default true
 );

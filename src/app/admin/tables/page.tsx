@@ -71,9 +71,9 @@ export default function AdminTablesPage() {
   // CREATE: Add Room
   const handleAddRoom = async (e: React.FormEvent) => {
     e.preventDefault();
-    const num = Number(newTableNum);
-    if (!num || isNaN(num) || num <= 0) {
-      setAddError('Vui lòng nhập số phòng hợp lệ');
+    const val = newTableNum.trim();
+    if (!val) {
+      setAddError('Vui lòng nhập tên hoặc số phòng hợp lệ');
       return;
     }
 
@@ -83,7 +83,7 @@ export default function AdminTablesPage() {
       const resp = await fetch('/api/tables', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tableNumber: num }),
+        body: JSON.stringify({ tableNumber: val }),
       });
 
       const res = await resp.json();
@@ -136,9 +136,9 @@ export default function AdminTablesPage() {
     e.preventDefault();
     if (!editingTable) return;
 
-    const num = Number(editTableNum);
-    if (!num || isNaN(num) || num <= 0) {
-      setEditError('Vui lòng nhập số phòng hợp lệ');
+    const val = editTableNum.trim();
+    if (!val) {
+      setEditError('Vui lòng nhập tên hoặc số phòng hợp lệ');
       return;
     }
 
@@ -149,7 +149,7 @@ export default function AdminTablesPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tableNumber: num,
+          tableNumber: val,
           active: editActive,
         }),
       });
@@ -306,7 +306,7 @@ export default function AdminTablesPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {tables.map((table) => {
-                const qrUrl = `${baseUrl || 'http://localhost:3000'}/order?table=${table.table_number}`;
+                const qrUrl = `${baseUrl || 'http://localhost:3000'}/order?table=${encodeURIComponent(String(table.table_number))}`;
                 const isActive = table.active ?? true;
 
                 return (
@@ -323,7 +323,7 @@ export default function AdminTablesPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black px-3.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200">
-                            Phòng {table.table_number}
+                            {/^phòng/i.test(String(table.table_number).trim()) ? String(table.table_number).trim() : `Phòng ${String(table.table_number).trim()}`}
                           </span>
                         </div>
 
@@ -422,7 +422,7 @@ export default function AdminTablesPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-stone-900">Thêm phòng mới</h3>
-                  <p className="text-xs text-stone-500">Nhập số phòng để tạo mã QR đặt món</p>
+                  <p className="text-xs text-stone-500">Nhập tên hoặc số phòng để tạo mã QR đặt món</p>
                 </div>
               </div>
 
@@ -435,12 +435,11 @@ export default function AdminTablesPage() {
               <form onSubmit={handleAddRoom} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                    Số phòng
+                    Tên / Số phòng
                   </label>
                   <input
-                    type="number"
-                    min="1"
-                    placeholder="Ví dụ: 620"
+                    type="text"
+                    placeholder="Ví dụ: 620 hoặc VIP 1"
                     value={newTableNum}
                     onChange={(e) => setNewTableNum(e.target.value)}
                     autoFocus
@@ -489,7 +488,7 @@ export default function AdminTablesPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-stone-900">Sửa thông tin phòng</h3>
-                  <p className="text-xs text-stone-500">Chỉnh sửa số phòng hoặc trạng thái</p>
+                  <p className="text-xs text-stone-500">Chỉnh sửa tên, số phòng hoặc trạng thái</p>
                 </div>
               </div>
 
@@ -502,11 +501,11 @@ export default function AdminTablesPage() {
               <form onSubmit={handleSaveEdit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                    Số phòng
+                    Tên / Số phòng
                   </label>
                   <input
-                    type="number"
-                    min="1"
+                    type="text"
+                    placeholder="Ví dụ: 620 hoặc VIP 1"
                     value={editTableNum}
                     onChange={(e) => setEditTableNum(e.target.value)}
                     className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-bold"
@@ -556,7 +555,7 @@ export default function AdminTablesPage() {
               </div>
 
               <h3 className="text-base font-bold text-stone-900 mb-1">
-                Xác nhận xóa Phòng {deletingTable.table_number}?
+                Xác nhận xóa {/^phòng/i.test(String(deletingTable.table_number).trim()) ? String(deletingTable.table_number).trim() : `Phòng ${String(deletingTable.table_number).trim()}`}?
               </h3>
               <p className="text-xs text-stone-500 mb-6">
                 Mã QR và phiên gọi món của phòng này sẽ bị gỡ bỏ. Hành động này không thể hoàn tác.
@@ -590,7 +589,7 @@ export default function AdminTablesPage() {
             isOpen={!!selectedTable}
             onClose={() => setSelectedTable(null)}
             tableNumber={selectedTable.table_number}
-            qrUrl={`${baseUrl || 'http://localhost:3000'}/order?table=${selectedTable.table_number}`}
+            qrUrl={`${baseUrl || 'http://localhost:3000'}/order?table=${encodeURIComponent(String(selectedTable.table_number))}`}
           />
         )}
       </div>

@@ -55,11 +55,11 @@ export async function POST(req: NextRequest) {
         const { data: tableData, error: tableError } = await supabase
           .from('restaurant_tables')
           .select('id, table_number')
-          .eq('table_number', Number(tableNumber))
+          .eq('table_number', tableNumber)
           .single();
 
         if (tableError || !tableData) {
-          return NextResponse.json({ error: 'Không tìm thấy bàn yêu cầu' }, { status: 404 });
+          return NextResponse.json({ error: 'Không tìm thấy phòng yêu cầu' }, { status: 404 });
         }
 
         // 2. Fetch official item prices & real-time stock from DB
@@ -247,13 +247,13 @@ export async function POST(req: NextRequest) {
         }
 
         const tables = getMockTables();
-        const table = tables.find((t) => t.table_number === Number(tableNumber));
+        const table = tables.find((t) => String(t.table_number).toLowerCase() === String(tableNumber).toLowerCase());
 
         const newOrder: Order = {
           id: orderId,
           session_id: sessionId,
           table_id: table?.id || 'tbl-1',
-          table_number: Number(tableNumber),
+          table_number: tableNumber,
           status: 'WAITING',
           note: note || '',
           total_amount: totalAmount,
@@ -337,7 +337,7 @@ export async function GET(req: NextRequest) {
         results = results.filter((o) => o.session_id === sessionId);
       }
       if (tableNumber) {
-        results = results.filter((o) => o.table_number === Number(tableNumber));
+        results = results.filter((o) => String(o.table_number).toLowerCase() === String(tableNumber).toLowerCase());
       }
       if (status) {
         results = results.filter((o) => o.status === status);

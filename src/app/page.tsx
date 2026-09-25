@@ -18,7 +18,7 @@ import {
 export default function HomePage() {
   const router = useRouter();
   const [tableInput, setTableInput] = useState('');
-  const [tables, setTables] = useState<{ id: string; table_number: number; active: boolean }[]>([]);
+  const [tables, setTables] = useState<{ id: string; table_number: string | number; active: boolean }[]>([]);
   const [loadingTables, setLoadingTables] = useState(true);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function HomePage() {
             <input
               value={tableInput}
               onChange={(e) => setTableInput(e.target.value)}
-              placeholder="Nhập số phòng (vd: 1, 2, 620)..."
+              placeholder="Nhập tên/số phòng (vd: 620, VIP 1)..."
               className="flex-1 rounded-xl border border-stone-200 bg-stone-50/60 px-3.5 py-2.5 text-sm text-stone-900 placeholder-stone-400 outline-none focus:bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
             />
             <button
@@ -122,10 +122,10 @@ export default function HomePage() {
               tables.map((t) => (
                 <Link
                   key={t.id || t.table_number}
-                  href={`/order?table=${t.table_number}`}
+                  href={`/order?table=${encodeURIComponent(String(t.table_number))}`}
                   className="px-3 py-1 rounded-lg bg-stone-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-stone-600 border border-transparent text-[11px] font-bold transition-all active:scale-95"
                 >
-                  Phòng {String(t.table_number).padStart(2, '0')}
+                  {/^phòng/i.test(String(t.table_number).trim()) ? String(t.table_number).trim() : (/^\d+$/.test(String(t.table_number).trim()) ? `Phòng ${String(t.table_number).trim().padStart(2, '0')}` : `Phòng ${String(t.table_number).trim()}`)}
                 </Link>
               ))
             )}

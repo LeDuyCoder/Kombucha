@@ -16,13 +16,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const updates: Record<string, any> = {};
 
     if (tableNumber !== undefined) {
-      const num = Number(tableNumber);
-      if (isNaN(num) || num <= 0) {
-        return NextResponse.json({ error: 'Số phòng không hợp lệ' }, { status: 400 });
+      const rawVal = String(tableNumber || '').trim();
+      if (!rawVal) {
+        return NextResponse.json({ error: 'Tên hoặc số phòng không hợp lệ' }, { status: 400 });
       }
 
-      updates.table_number = num;
-      updates.qr_token = `table-${String(num).padStart(2, '0')}-token`;
+      const cleanSlug = rawVal.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'room';
+      updates.table_number = rawVal;
+      updates.qr_token = `table-${cleanSlug}-${Date.now().toString(36)}`;
     }
 
     if (active !== undefined) {

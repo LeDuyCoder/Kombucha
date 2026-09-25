@@ -2,7 +2,7 @@ export type OrderStatus = 'WAITING' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CAN
 
 export interface RestaurantTable {
   id: string;
-  table_number: number;
+  table_number: string | number;
   qr_token: string;
   active: boolean;
 }
@@ -50,7 +50,7 @@ export interface Order {
   id: string;
   session_id: string;
   table_id: string;
-  table_number?: number;
+  table_number?: string | number;
   status: OrderStatus;
   note?: string | null;
   total_amount: number;
@@ -68,7 +68,7 @@ export interface CartItem {
 }
 
 export interface CreateOrderPayload {
-  tableNumber: number;
+  tableNumber: string | number;
   sessionId: string;
   note?: string;
   items: {

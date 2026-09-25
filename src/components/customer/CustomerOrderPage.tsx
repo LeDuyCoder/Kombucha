@@ -19,7 +19,7 @@ export default function CustomerOrderPage() {
   const searchParams = useSearchParams();
   const tableParam = searchParams.get('table');
 
-  const [tableNumber, setTableNumber] = useState<number | null>(null);
+  const [tableNumber, setTableNumber] = useState<string | number | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
 
@@ -65,15 +65,15 @@ export default function CustomerOrderPage() {
   // 1. Initialize table & session
   useEffect(() => {
     const initSession = async () => {
-      const tNum = Number(tableParam);
-      if (!tNum || isNaN(tNum)) {
+      const tVal = tableParam ? decodeURIComponent(tableParam).trim() : null;
+      if (!tVal) {
         setLoading(false);
         return;
       }
-      setTableNumber(tNum);
+      setTableNumber(tVal);
 
       // Check localStorage for existing session
-      const storageKey = `session_table_${tNum}`;
+      const storageKey = `session_table_${tVal}`;
       const existingToken = localStorage.getItem(storageKey);
       const token = existingToken || generateSessionToken();
 
@@ -82,7 +82,7 @@ export default function CustomerOrderPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            tableNumber: tNum,
+            tableNumber: tVal,
             sessionToken: token,
           }),
         });

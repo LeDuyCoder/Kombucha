@@ -116,7 +116,9 @@ async function generateStandeeCard(tableNumber: string | number, qrCanvas: HTMLC
   ctx.fillStyle = '#1C1917'; // stone-900
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`PHÒNG ${String(tableNumber).padStart(2, '0')}`, width / 2, cardY + 220);
+  const str = String(tableNumber).trim();
+  const titleText = /^phòng/i.test(str) ? str.toUpperCase() : (/^\d+$/.test(str) ? `PHÒNG ${str.padStart(2, '0')}` : `PHÒNG ${str.toUpperCase()}`);
+  ctx.fillText(titleText, width / 2, cardY + 220);
   ctx.restore();
 
   // 6. QR Code Outer Frame
@@ -190,7 +192,9 @@ export function QRModal({ isOpen, onClose, tableNumber, qrUrl }: QRModalProps) {
       
       const link = document.createElement('a');
       link.href = standeeDataUrl;
-      link.download = `the-de-ban-phong-${String(tableNumber).padStart(2, '0')}.png`;
+      const str = String(tableNumber).trim();
+      const filenameStr = /^phòng/i.test(str) ? str.toLowerCase().replace(/\s+/g, '-') : (/^\d+$/.test(str) ? str.padStart(2, '0') : str.toLowerCase().replace(/\s+/g, '-'));
+      link.download = `the-de-ban-phong-${filenameStr}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -216,7 +220,7 @@ export function QRModal({ isOpen, onClose, tableNumber, qrUrl }: QRModalProps) {
           <!DOCTYPE html>
           <html>
             <head>
-              <title>In Thẻ Để Bàn - Phòng ${String(tableNumber).padStart(2, '0')}</title>
+              <title>In Thẻ Để Bàn - Phòng ${String(tableNumber).trim()}</title>
               <style>
                 @page {
                   size: auto;
@@ -317,7 +321,7 @@ export function QRModal({ isOpen, onClose, tableNumber, qrUrl }: QRModalProps) {
             className="text-2xl sm:text-3xl font-black tracking-tight mb-4 uppercase"
             style={{ color: '#1c1917' }}
           >
-            PHÒNG {String(tableNumber).padStart(2, '0')}
+            {/^phòng/i.test(String(tableNumber).trim()) ? String(tableNumber).trim().toUpperCase() : (/^\d+$/.test(String(tableNumber).trim()) ? `PHÒNG ${String(tableNumber).trim().padStart(2, '0')}` : `PHÒNG ${String(tableNumber).trim().toUpperCase()}`)}
           </h2>
           
           {/* QR Canvas Frame */}

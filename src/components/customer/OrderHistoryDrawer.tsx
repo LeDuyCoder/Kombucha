@@ -9,7 +9,7 @@ interface OrderHistoryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   orders: Order[];
-  tableNumber: number | null;
+  tableNumber: string | number | null;
   onOpenFeedback?: (order: Order) => void;
 }
 
@@ -68,7 +68,9 @@ export const OrderHistoryDrawer: React.FC<OrderHistoryDrawerProps> = ({
         <div className="p-4 border-b border-stone-100 flex items-center justify-between">
           <div>
             <h2 className="font-bold text-stone-900 text-lg">Đơn hàng của bạn</h2>
-            <p className="text-xs text-stone-500">Phòng {tableNumber || '--'}</p>
+            <p className="text-xs text-stone-500">
+              {tableNumber ? (/^phòng/i.test(String(tableNumber).trim()) ? String(tableNumber).trim() : `Phòng ${String(tableNumber).trim()}`) : 'Phòng --'}
+            </p>
           </div>
           <button
             onClick={onClose}

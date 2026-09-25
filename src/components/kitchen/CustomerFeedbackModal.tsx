@@ -25,7 +25,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
   orders,
 }) => {
   const [selectedStar, setSelectedStar] = useState<number | 'ALL'>('ALL');
-  const [selectedTable, setSelectedTable] = useState<number | 'ALL'>('ALL');
+  const [selectedTable, setSelectedTable] = useState<string | number | 'ALL'>('ALL');
 
   // Filter orders that have ratings
   const ratedOrders = useMemo(() => {
@@ -65,18 +65,23 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
 
   // Available room numbers for filtering
   const availableRooms = useMemo(() => {
-    const set = new Set<number>();
+    const set = new Set<string | number>();
     ratedOrders.forEach((o) => {
       if (o.table_number) set.add(o.table_number);
     });
-    return Array.from(set).sort((a, b) => a - b);
+    return Array.from(set).sort((a, b) => {
+      const numA = Number(a);
+      const numB = Number(b);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return String(a).localeCompare(String(b), 'vi');
+    });
   }, [ratedOrders]);
 
   // Filtered list
   const filteredList = useMemo(() => {
     return ratedOrders.filter((o) => {
       const matchStar = selectedStar === 'ALL' || o.rating === selectedStar;
-      const matchTable = selectedTable === 'ALL' || o.table_number === selectedTable;
+      const matchTable = selectedTable === 'ALL' || String(o.table_number) === String(selectedTable);
       return matchStar && matchTable;
     });
   }, [ratedOrders, selectedStar, selectedTable]);
@@ -226,14 +231,14 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
               <select
                 value={selectedTable}
                 onChange={(e) =>
-                  setSelectedTable(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))
+                  setSelectedTable(e.target.value === 'ALL' ? 'ALL' : e.target.value)
                 }
                 className="bg-stone-100 border border-stone-200 rounded-lg px-2 py-1 text-xs font-bold focus:outline-hidden cursor-pointer"
               >
                 <option value="ALL">Tất cả phòng</option>
                 {availableRooms.map((r) => (
                   <option key={r} value={r}>
-                    Phòng {r}
+                    {/^phòng/i.test(String(r).trim()) ? String(r).trim() : (/^\d+$/.test(String(r).trim()) ? `Phòng ${String(r).trim().padStart(2, '0')}` : `Phòng ${String(r).trim()}`)}
                   </option>
                 ))}
               </select>
@@ -264,7 +269,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="px-2.5 py-0.5 rounded-lg bg-amber-100 text-amber-900 border border-amber-300/80 font-black text-xs font-mono">
-                        Phòng {order.table_number ? String(order.table_number).padStart(2, '0') : '--'}
+                        {order.table_number ? (/^phòng/i.test(String(order.table_number).trim()) ? String(order.table_number).trim() : (/^\d+$/.test(String(order.table_number).trim()) ? `Phòng ${String(order.table_number).trim().padStart(2, '0')}` : `Phòng ${String(order.table_number).trim()}`)) : 'Phòng --'}
                       </span>
                       <span className="text-xs text-stone-400 font-mono font-medium">
                         #{order.id.slice(-5).toUpperCase()}

@@ -18,7 +18,7 @@ export const KitchenDashboard: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [connected, setConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<number | 'ALL'>('ALL');
+  const [selectedTable, setSelectedTable] = useState<string | number | 'ALL'>('ALL');
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [receiptOpen, setReceiptOpen] = useState(false);
@@ -273,7 +273,7 @@ export const KitchenDashboard: React.FC = () => {
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       // 1. Filter by Table
-      if (selectedTable !== 'ALL' && o.table_number !== selectedTable) {
+      if (selectedTable !== 'ALL' && String(o.table_number) !== String(selectedTable)) {
         return false;
       }
 
@@ -295,7 +295,7 @@ export const KitchenDashboard: React.FC = () => {
 
   // ------- Dynamic Room List -------
   const roomNumbers = useMemo(() => {
-    const set = new Set<number>();
+    const set = new Set<string | number>();
     
     // 1. Add all configured tables
     tables.forEach((t) => {
@@ -307,8 +307,13 @@ export const KitchenDashboard: React.FC = () => {
       if (o.table_number) set.add(o.table_number);
     });
     
-    // Sort ascending
-    return Array.from(set).sort((a, b) => a - b);
+    // Sort
+    return Array.from(set).sort((a, b) => {
+      const numA = Number(a);
+      const numB = Number(b);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return String(a).localeCompare(String(b), 'vi');
+    });
   }, [tables, orders]);
 
   // ------- Group & sort orders by status -------
@@ -443,7 +448,7 @@ export const KitchenDashboard: React.FC = () => {
                     : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                 }`}
               >
-                Phòng {t}
+                {/^phòng/i.test(String(t).trim()) ? String(t).trim() : (/^\d+$/.test(String(t).trim()) ? `Phòng ${String(t).trim().padStart(2, '0')}` : `Phòng ${String(t).trim()}`)}
               </button>
             ))}
           </div>

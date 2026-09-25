@@ -39,7 +39,7 @@ interface ReportData {
     total: number;
   }[];
   tableBreakdown: {
-    tableNumber: number;
+    tableNumber: string | number;
     orderCount: number;
     totalAmount: number;
   }[];
@@ -105,9 +105,9 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
     });
 
     csvContent += `\nCHI TIẾT THEO BÀN\n`;
-    csvContent += `Số bàn,Số lượt gọi,Tổng tiền (VNĐ)\n`;
+    csvContent += `Phòng,Số lượt gọi,Tổng tiền (VNĐ)\n`;
     report.tableBreakdown.forEach((tbl) => {
-      csvContent += `Bàn ${tbl.tableNumber},${tbl.orderCount},${tbl.totalAmount}\n`;
+      csvContent += `"${tbl.tableNumber}",${tbl.orderCount},${tbl.totalAmount}\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -285,7 +285,9 @@ export const DailyReceiptModal: React.FC<DailyReceiptModalProps> = ({
                         key={tbl.tableNumber}
                         className="p-2 bg-stone-50 rounded-lg flex items-center justify-between border border-stone-100"
                       >
-                        <span className="font-bold text-stone-700">Phòng {tbl.tableNumber}</span>
+                        <span className="font-bold text-stone-700">
+                          {/^phòng/i.test(String(tbl.tableNumber).trim()) ? String(tbl.tableNumber).trim() : `Phòng ${String(tbl.tableNumber).trim()}`}
+                        </span>
                         <div className="text-right">
                           <span className="font-extrabold text-stone-900 block">
                             {formatCurrency(tbl.totalAmount)}

@@ -100,10 +100,10 @@ export async function GET(req: NextRequest) {
     const totalItemsSold = itemBreakdown.reduce((sum, i) => sum + i.quantity, 0);
 
     // 3. Table Breakdown
-    const tableMap = new Map<number, { tableNumber: number; orderCount: number; totalAmount: number }>();
+    const tableMap = new Map<string | number, { tableNumber: string | number; orderCount: number; totalAmount: number }>();
     for (const order of orders) {
       if (order.status === 'CANCELLED') continue;
-      const tNum = order.table_number || 0;
+      const tNum = order.table_number || 'N/A';
       const existing = tableMap.get(tNum);
       if (existing) {
         existing.orderCount += 1;
@@ -117,7 +117,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const tableBreakdown = Array.from(tableMap.values()).sort((a, b) => a.tableNumber - b.tableNumber);
+    const tableBreakdown = Array.from(tableMap.values()).sort((a, b) => {
+      const numA = Number(a.tableNumber);
+      const numB = Number(b.tableNumber);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return String(a.tableNumber).localeCompare(String(b.tableNumber), 'vi');
+    });
 
     return NextResponse.json({
       date: targetDate,

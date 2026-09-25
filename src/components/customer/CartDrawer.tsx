@@ -10,7 +10,7 @@ interface CartDrawerProps {
   onClose: () => void;
   onOpen: () => void;
   cart: CartItem[];
-  tableNumber: number | null;
+  tableNumber: string | number | null;
   onAddToCart: (item: CartItem['menuItem']) => void;
   onRemoveFromCart: (item: CartItem['menuItem']) => void;
   onClearCart: () => void;
@@ -67,7 +67,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div className="text-left">
                   <div className="text-[11px] text-stone-500 font-semibold tracking-wide">
-                    Phòng {tableNumber ? String(tableNumber).padStart(2, '0') : '--'} • <span className="text-stone-700">{totalQuantity} món</span>
+                    {tableNumber ? (/^\d+$/.test(String(tableNumber).trim()) ? `Phòng ${String(tableNumber).trim().padStart(2, '0')}` : (/^phòng/i.test(String(tableNumber).trim()) ? String(tableNumber).trim() : `Phòng ${String(tableNumber).trim()}`)) : 'Phòng --'} • <span className="text-stone-700">{totalQuantity} món</span>
                   </div>
                   <div className="font-black text-rose-600 text-base sm:text-lg tracking-tight font-mono">
                     {formatCurrency(totalPrice)}
@@ -110,7 +110,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     Đơn gọi món
                   </h2>
                   <p className="text-[11px] text-stone-500 font-medium">
-                    Phòng {tableNumber ? String(tableNumber).padStart(2, '0') : '--'} • {totalQuantity} món đã chọn
+                    {tableNumber ? (/^\d+$/.test(String(tableNumber).trim()) ? `Phòng ${String(tableNumber).trim().padStart(2, '0')}` : (/^phòng/i.test(String(tableNumber).trim()) ? String(tableNumber).trim() : `Phòng ${String(tableNumber).trim()}`)) : 'Phòng --'} • {totalQuantity} món đã chọn
                   </p>
                 </div>
               </div>
