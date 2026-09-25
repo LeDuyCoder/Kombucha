@@ -78,13 +78,13 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
           {onSelectColumn && count > 0 && (
             <button
               onClick={onSelectColumn}
-              className="w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-900 transition-colors shrink-0"
+              className="w-5 h-5 flex items-center justify-center transition-colors shrink-0 active:scale-90 cursor-pointer"
               title={isColumnSelected ? 'Bỏ chọn cả cột' : 'Chọn tất cả cột này'}
             >
               {isColumnSelected ? (
-                <CheckSquare className="w-4 h-4 fill-white stroke-[2.5]" />
+                <CheckSquare className="w-4 h-4 text-amber-600 stroke-[2.5]" />
               ) : (
-                <Square className="w-4 h-4" />
+                <Square className="w-4 h-4 text-stone-400 hover:text-stone-600" />
               )}
             </button>
           )}
@@ -103,7 +103,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </div>
 
       {/* Column Scrollable Body */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-stone-50/50">
+      <div className="flex-1 overflow-y-auto p-3 pb-24 space-y-3 bg-stone-50/50">
         {React.Children.count(children) === 0 ? (
           <div className="h-40 flex items-center justify-center text-stone-400 text-xs italic">
             Chưa có đơn hàng

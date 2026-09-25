@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Play,
   CheckCircle2,
+  Check,
   CheckCheck,
   XCircle,
   ChefHat,
@@ -44,8 +45,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     <div
       className={cn(
         'rounded-2xl border transition-all duration-200 shadow-xs flex flex-col overflow-hidden select-none bg-white relative',
-        // Selection highlight
-        isSelected && 'ring-2 ring-rose-500 border-rose-300 bg-rose-50/15 shadow-md',
+        // Selection highlight - warm amber
+        isSelected && 'ring-2 ring-amber-500/70 border-amber-400 bg-amber-50/20 shadow-xs',
         // Status border & background styling
         order.status === 'WAITING' && isUrgent && 'border-red-400 ring-2 ring-red-400/30',
         order.status === 'WAITING' && isWarning && !isUrgent && 'border-amber-400 ring-1 ring-amber-400/30',
@@ -67,15 +68,15 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 onSelectToggle(order.id);
               }}
               className={cn(
-                'w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shrink-0',
+                'w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0 active:scale-90',
                 isSelected
-                  ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
-                  : 'bg-white border-stone-300 hover:border-rose-400 text-transparent'
+                  ? 'bg-amber-600 border-amber-600 text-white shadow-2xs'
+                  : 'bg-white border-stone-300 hover:border-amber-500 hover:bg-amber-50/40 text-transparent'
               )}
               title={isSelected ? 'Bỏ chọn đơn' : 'Chọn đơn'}
               aria-label="Chọn đơn này"
             >
-              <CheckCheck className="w-3.5 h-3.5 stroke-[3]" />
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
             </button>
           )}
 

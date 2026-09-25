@@ -469,7 +469,7 @@ export const KitchenDashboard: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-stone-100 flex flex-col overflow-hidden text-stone-900 font-sans pb-[100px] sm:pb-24">
+    <div className="h-screen bg-stone-100 flex flex-col overflow-hidden text-stone-900 font-sans">
       {/* Header */}
       <KitchenHeader
         isMuted={isMuted}
