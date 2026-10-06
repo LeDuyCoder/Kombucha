@@ -134,7 +134,12 @@ export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
             </button>
           ) : item.sizes?.length ? (
             <button
-              onClick={(e) => { e.stopPropagation(); if (selectedSize) onAddToCart(item, selectedSize); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!selectedSize) return;
+                onAddToCart(item, selectedSize);
+                onClose();
+              }}
               disabled={!selectedSize}
               className="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm tracking-wide shadow-md disabled:opacity-50"
             >Thêm {selectedSize ? `size ${selectedSize.name}` : 'vào giỏ'} · {formatCurrency(selectedSize?.price ?? 0)}</button>
