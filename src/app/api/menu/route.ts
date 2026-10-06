@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { INITIAL_CATEGORIES, getMockMenuItems, addMockMenuItem, updateMockMenuItem } from '@/lib/mock-data';
+import { getMockMenuCategories, getMockMenuItems, addMockMenuItem, updateMockMenuItem } from '@/lib/mock-data';
 
 export async function GET() {
   try {
@@ -23,7 +23,7 @@ export async function GET() {
       if (catError || itemsError) {
         console.error('Menu Fetch DB Error:', catError || itemsError);
         return NextResponse.json({
-          categories: INITIAL_CATEGORIES,
+          categories: getMockMenuCategories(),
           items: getMockMenuItems(),
         });
       }
@@ -34,19 +34,19 @@ export async function GET() {
       }));
 
       return NextResponse.json({
-        categories: categories || INITIAL_CATEGORIES,
+        categories: categories || getMockMenuCategories(),
         items: formattedItems,
       });
     }
 
     return NextResponse.json({
-      categories: INITIAL_CATEGORIES,
+      categories: getMockMenuCategories(),
       items: getMockMenuItems(),
     });
   } catch (error) {
     console.error('Menu API GET Error:', error);
     return NextResponse.json({
-      categories: INITIAL_CATEGORIES,
+      categories: getMockMenuCategories(),
       items: getMockMenuItems(),
     });
   }
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Mock mode
-    const cat = INITIAL_CATEGORIES.find((c) => c.id === category_id);
+    const cat = getMockMenuCategories().find((c) => c.id === category_id);
     const mockItem = {
       id: `m-${Date.now()}`,
       ...newItemData,

@@ -341,23 +341,10 @@ export default function CustomerOrderPage() {
     [tableNumber, sessionId, cart, isStoreOpen, loadMenu]
   );
 
-  const getCategoryPriority = (name: string) => {
-    const lower = (name || '').toLowerCase();
-    if (lower.includes('kombucha')) return 1;
-    if (lower.includes('trà') || lower.includes('tea')) return 2;
-    if (lower.includes('nước ngọt') || lower.includes('ngọt') || lower.includes('soda')) return 3;
-    return 99;
-  };
-
   // Group items by category for 'all' tab or specific category tab
   const groupedCategories = useMemo(() => {
-    // Sort categories explicitly: 1. KOMBUCHA, 2. TRÀ, 3. NƯỚC NGỌT
-    const sortedCats = [...categories].sort((a, b) => {
-      const pA = getCategoryPriority(a.name);
-      const pB = getCategoryPriority(b.name);
-      if (pA !== pB) return pA - pB;
-      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
-    });
+    // Follow the saved category order.
+    const sortedCats = [...categories].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
     if (activeCategory !== 'all') {
       const cat = sortedCats.find((c) => c.id === activeCategory);
@@ -365,7 +352,7 @@ export default function CustomerOrderPage() {
       return cat ? [{ category: cat, items }] : [];
     }
 
-    // When 'all': group all items by sorted categories (Mục 1: KOMBUCHA, Mục 2: TRÀ, Mục 3: NƯỚC NGỌT)
+    // When 'all', group items by the saved category order.
     const groups = sortedCats
       .map((cat) => {
         const items = menuItems.filter((i) => i.category_id === cat.id && i.available);

@@ -24,8 +24,12 @@ import {
   ChevronDown
 } from 'lucide-react';
 
-const CustomCategorySelect = ({ value, onChange, categories }: { value: string, onChange: (val: string) => void, categories: MenuCategory[] }) => {
+const CustomCategorySelect = ({ value, onChange, categories, onCreateCategory }: { value: string, onChange: (val: string) => void, categories: MenuCategory[], onCreateCategory: (name: string) => Promise<MenuCategory> }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isCreating, setIsCreating] = React.useState(false);
+  const [newCategoryName, setNewCategoryName] = React.useState('');
+  const [createError, setCreateError] = React.useState('');
+  const [createLoading, setCreateLoading] = React.useState(false);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -39,6 +43,27 @@ const CustomCategorySelect = ({ value, onChange, categories }: { value: string, 
   }, []);
 
   const selectedCat = categories.find(c => c.id === value);
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      setCreateError('Vui lòng nhập tên danh mục.');
+      return;
+    }
+
+    setCreateLoading(true);
+    setCreateError('');
+    try {
+      const category = await onCreateCategory(newCategoryName.trim());
+      onChange(category.id);
+      setNewCategoryName('');
+      setIsCreating(false);
+      setIsOpen(false);
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : 'Không thể tạo danh mục.');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   return (
     <div ref={wrapperRef} className="relative w-full">
@@ -72,6 +97,41 @@ const CustomCategorySelect = ({ value, onChange, categories }: { value: string, 
               {c.name}
             </button>
           ))}
+          <div className="mt-1 border-t border-stone-100 pt-1">
+            {isCreating ? (
+              <div className="space-y-2 px-3 py-2">
+                <input
+                  autoFocus
+                  value={newCategoryName}
+                  onChange={(event) => setNewCategoryName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void handleCreateCategory();
+                    }
+                  }}
+                  placeholder="Tên danh mục mới"
+                  maxLength={60}
+                  className="w-full rounded-lg border border-stone-200 px-2.5 py-2 text-sm font-medium outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                />
+                {createError && <p className="text-xs font-medium text-rose-600">{createError}</p>}
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => { setIsCreating(false); setCreateError(''); }} className="flex-1 rounded-lg border border-stone-200 py-2 text-xs font-bold text-stone-600">Hủy</button>
+                  <button type="button" onClick={() => void handleCreateCategory()} disabled={createLoading} className="flex-1 rounded-lg bg-rose-600 py-2 text-xs font-bold text-white disabled:opacity-60">
+                    {createLoading ? 'Đang lưu...' : 'Tạo danh mục'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsCreating(true)}
+                className="w-full px-3.5 py-2.5 text-left text-sm font-bold text-rose-600 hover:bg-rose-50"
+              >
+                + Tạo danh mục mới
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -136,6 +196,24 @@ export default function AdminMenuPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const createCategory = async (name: string) => {
+    const resp = await fetch('/api/menu/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const result = await resp.json();
+    if (resp.status === 409 && result.category) {
+      setCategories((current) => current.some((category) => category.id === result.category.id)
+        ? current
+        : [...current, result.category].sort((a, b) => a.sort_order - b.sort_order));
+      return result.category as MenuCategory;
+    }
+    if (!resp.ok) throw new Error(result.error || 'Không thể tạo danh mục.');
+    setCategories((current) => [...current, result.category].sort((a, b) => a.sort_order - b.sort_order));
+    return result.category as MenuCategory;
   };
 
   useEffect(() => {
@@ -760,6 +838,7 @@ export default function AdminMenuPage() {
                       value={addCategoryId}
                       onChange={setAddCategoryId}
                       categories={categories}
+                      onCreateCategory={createCategory}
                     />
                   </div>
                 </div>
@@ -971,6 +1050,7 @@ export default function AdminMenuPage() {
                       value={editCategoryId}
                       onChange={setEditCategoryId}
                       categories={categories}
+                      onCreateCategory={createCategory}
                     />
                   </div>
                 </div>

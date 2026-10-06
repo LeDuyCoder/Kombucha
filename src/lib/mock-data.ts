@@ -263,6 +263,7 @@ const globalForOrders = globalThis as unknown as {
   mockOrders: import('@/types').Order[];
   mockTables: RestaurantTable[];
   mockMenuItems: MenuItem[];
+  mockMenuCategories: MenuCategory[];
   mockOrderIdCounter: number;
   isStoreOpen?: boolean;
   kitchenPin?: string;
@@ -282,11 +283,23 @@ if (!globalForOrders.mockMenuItems) {
   globalForOrders.mockMenuItems = [...INITIAL_MENU_ITEMS];
 }
 
+if (!globalForOrders.mockMenuCategories) {
+  globalForOrders.mockMenuCategories = [...INITIAL_CATEGORIES];
+}
+
 if (globalForOrders.isStoreOpen === undefined) {
   globalForOrders.isStoreOpen = true;
 }
 
 export const getMockMenuItems = () => globalForOrders.mockMenuItems || INITIAL_MENU_ITEMS;
+
+export const getMockMenuCategories = () => globalForOrders.mockMenuCategories || INITIAL_CATEGORIES;
+
+export const addMockMenuCategory = (category: MenuCategory) => {
+  if (!globalForOrders.mockMenuCategories) globalForOrders.mockMenuCategories = [...INITIAL_CATEGORIES];
+  globalForOrders.mockMenuCategories.push(category);
+  return category;
+};
 
 export const addMockMenuItem = (item: MenuItem) => {
   if (!globalForOrders.mockMenuItems) globalForOrders.mockMenuItems = [...INITIAL_MENU_ITEMS];

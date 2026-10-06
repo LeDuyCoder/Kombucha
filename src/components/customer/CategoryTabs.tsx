@@ -20,19 +20,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number } | null>(null);
 
   const sortedCategories = useMemo(() => {
-    return [...categories].sort((a, b) => {
-      const getPriority = (name: string) => {
-        const lower = (name || '').toLowerCase();
-        if (lower.includes('kombucha')) return 1;
-        if (lower.includes('trà') || lower.includes('tea')) return 2;
-        if (lower.includes('nước ngọt') || lower.includes('ngọt') || lower.includes('soda')) return 3;
-        return 99;
-      };
-      const pA = getPriority(a.name);
-      const pB = getPriority(b.name);
-      if (pA !== pB) return pA - pB;
-      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
-    });
+    return [...categories].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
   }, [categories]);
 
   const allCategories = useMemo(() => {
