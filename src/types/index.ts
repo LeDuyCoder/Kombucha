@@ -13,6 +13,12 @@ export interface MenuCategory {
   sort_order: number;
 }
 
+export interface MenuSize {
+  name: string;
+  price: number;
+  original_price?: number | null;
+}
+
 export interface MenuItem {
   id: string;
   category_id?: string;
@@ -25,6 +31,7 @@ export interface MenuItem {
   available: boolean;
   stock_quantity?: number | null;
   sort_order: number;
+  sizes?: MenuSize[];
 }
 
 export interface Session {
@@ -44,6 +51,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   note?: string | null;
+  size_name?: string | null;
 }
 
 export interface Order {
@@ -65,6 +73,7 @@ export interface CartItem {
   menuItem: MenuItem;
   quantity: number;
   note?: string;
+  size?: MenuSize;
 }
 
 export interface CreateOrderPayload {
@@ -74,6 +83,7 @@ export interface CreateOrderPayload {
   items: {
     menu_item_id: string;
     quantity: number;
+    size_name?: string;
     note?: string;
   }[];
 }

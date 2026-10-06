@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { MenuItem } from '@/types';
+import React, { useState } from 'react';
+import { MenuItem, MenuSize } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { X, Plus, Minus, Info, Tag } from 'lucide-react';
 
@@ -10,8 +10,8 @@ interface MenuItemDetailModalProps {
   quantityInCart: number;
   isOpen: boolean;
   onClose: () => void;
-  onAddToCart: (item: MenuItem) => void;
-  onRemoveFromCart: (item: MenuItem) => void;
+  onAddToCart: (item: MenuItem, size?: MenuSize) => void;
+  onRemoveFromCart: (item: MenuItem, size?: MenuSize) => void;
 }
 
 export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
@@ -22,9 +22,13 @@ export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
   onAddToCart,
   onRemoveFromCart,
 }) => {
+  const [selectedSizeName, setSelectedSizeName] = useState(item.sizes?.[0]?.name || '');
   if (!isOpen) return null;
 
   const isOutOfStock = !item.available;
+  const selectedSize = item.sizes?.find((size) => size.name === selectedSizeName);
+  const selectedPrice = selectedSize?.price ?? item.price;
+  const selectedOriginalPrice = selectedSize ? selectedSize.original_price : item.original_price;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-200">
@@ -64,12 +68,12 @@ export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
               <p className="text-[11px] text-stone-500 font-bold uppercase tracking-wider mb-0.5">Giá bán</p>
               <div className="flex flex-col items-end">
                 <p className="font-black text-rose-700 text-xl font-mono tracking-tight leading-none">
-                  {formatCurrency(item.price)}
+                  {formatCurrency(selectedPrice)}
                 </p>
-                {item.original_price && item.original_price > item.price && (
+                {selectedOriginalPrice && selectedOriginalPrice > selectedPrice && (
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-xs text-stone-400 line-through font-mono">
-                      {formatCurrency(item.original_price)}
+                      {formatCurrency(selectedOriginalPrice)}
                     </span>
                     <Tag className="w-3 h-3 text-rose-500 fill-rose-500/20" />
                   </div>
@@ -98,6 +102,28 @@ export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
           <p className="text-sm text-stone-600 leading-relaxed font-medium">
             {item.description || 'Chưa có mô tả chi tiết cho món này.'}
           </p>
+
+          {item.sizes && item.sizes.length > 0 && (
+            <div className="mt-5 space-y-2">
+              <p className="text-xs font-extrabold uppercase tracking-wider text-stone-700">Chọn size</p>
+              <div className="grid grid-cols-2 gap-2">
+                {item.sizes.map((size) => (
+                  <button
+                    key={size.name}
+                    type="button"
+                    onClick={() => setSelectedSizeName(size.name)}
+                    className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-bold ${selectedSizeName === size.name ? 'border-rose-500 bg-rose-50 text-rose-700 ring-1 ring-rose-200' : 'border-stone-200 text-stone-700'}`}
+                  >
+                    <span>{size.name}</span>
+                    <span className="flex flex-col items-end leading-tight">
+                      <span>{formatCurrency(size.price)}</span>
+                      {size.original_price && size.original_price > size.price && <span className="text-[10px] font-medium text-stone-400 line-through">{formatCurrency(size.original_price)}</span>}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer / Actions */}
@@ -106,6 +132,12 @@ export const MenuItemDetailModal: React.FC<MenuItemDetailModalProps> = ({
             <button disabled className="w-full py-3.5 rounded-2xl bg-stone-200 text-stone-500 font-bold text-sm">
               Món này hiện đang hết
             </button>
+          ) : item.sizes?.length ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (selectedSize) onAddToCart(item, selectedSize); }}
+              disabled={!selectedSize}
+              className="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm tracking-wide shadow-md disabled:opacity-50"
+            >Thêm {selectedSize ? `size ${selectedSize.name}` : 'vào giỏ'} · {formatCurrency(selectedSize?.price ?? 0)}</button>
           ) : quantityInCart > 0 ? (
             <div className="flex items-center justify-between p-1.5 rounded-2xl bg-white border border-rose-200 shadow-xs">
               <button

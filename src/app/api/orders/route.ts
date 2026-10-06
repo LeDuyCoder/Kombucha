@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
         const itemIds = items.map((i: { menu_item_id: string }) => i.menu_item_id);
         const { data: dbItems, error: itemsError } = await supabase
           .from('menu_items')
-          .select('id, name, price, available, stock_quantity')
+          .select('id, name, price, available, stock_quantity, sizes')
           .in('id', itemIds);
 
         if (itemsError || !dbItems || dbItems.length === 0) {
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
           price: number;
           quantity: number;
           note?: string;
+          size_name?: string | null;
         }[] = [];
 
         // Validate stock sufficiency for all requested items
@@ -99,19 +100,29 @@ export async function POST(req: NextRequest) {
           }
 
           const qty = Math.max(1, Number(item.quantity) || 1);
+          const selectedSize = Array.isArray(menuItem.sizes)
+            ? menuItem.sizes.find((size: { name: string }) => size.name === item.size_name)
+            : null;
+          if (Array.isArray(menuItem.sizes) && menuItem.sizes.length > 0 && !selectedSize) {
+            return NextResponse.json({ error: `Vui lòng chọn size cho món "${menuItem.name}"` }, { status: 400 });
+          }
+          if (item.size_name && !selectedSize) {
+            return NextResponse.json({ error: `Size của món "${menuItem.name}" không hợp lệ` }, { status: 400 });
+          }
 
           if (menuItem.stock_quantity !== null && menuItem.stock_quantity !== undefined) {
-            if (menuItem.stock_quantity < qty) {
+            const requestedQuantity = items.filter((requestedItem: { menu_item_id: string }) => requestedItem.menu_item_id === menuItem.id).reduce((sum: number, requestedItem: { quantity: number }) => sum + Math.max(1, Number(requestedItem.quantity) || 1), 0);
+            if (menuItem.stock_quantity < requestedQuantity) {
               return NextResponse.json(
                 {
-                  error: `Món "${menuItem.name}" chỉ còn ${menuItem.stock_quantity} phần trong kho, không đủ để đặt ${qty} phần. Vui lòng giảm số lượng.`,
+                  error: `Món "${menuItem.name}" chỉ còn ${menuItem.stock_quantity} phần trong kho, không đủ để đặt ${requestedQuantity} phần. Vui lòng giảm số lượng.`,
                 },
                 { status: 400 }
               );
             }
           }
 
-          const itemPrice = menuItem.price;
+          const itemPrice = selectedSize?.price ?? menuItem.price;
           totalAmount += itemPrice * qty;
 
           orderItemsToInsert.push({
@@ -120,14 +131,14 @@ export async function POST(req: NextRequest) {
             price: itemPrice,
             quantity: qty,
             note: item.note || '',
+            size_name: selectedSize?.name || null,
           });
         }
 
         // Deduct stock in Supabase
-        for (const item of items) {
-          const menuItem = itemMap.get(item.menu_item_id);
+        for (const menuItem of new Map(items.map((item: { menu_item_id: string }) => [item.menu_item_id, itemMap.get(item.menu_item_id)])).values()) {
           if (menuItem && menuItem.stock_quantity !== null && menuItem.stock_quantity !== undefined) {
-            const qty = Math.max(1, Number(item.quantity) || 1);
+            const qty = items.filter((item: { menu_item_id: string }) => item.menu_item_id === menuItem.id).reduce((sum: number, item: { quantity: number }) => sum + Math.max(1, Number(item.quantity) || 1), 0);
             const newStock = Math.max(0, menuItem.stock_quantity - qty);
             await supabase
               .from('menu_items')
@@ -210,34 +221,45 @@ export async function POST(req: NextRequest) {
           const qty = Math.max(1, Number(item.quantity) || 1);
 
           if (menuItem.stock_quantity !== null && menuItem.stock_quantity !== undefined) {
-            if (menuItem.stock_quantity < qty) {
+            const requestedQuantity = items.filter((requestedItem) => requestedItem.menu_item_id === menuItem.id).reduce((sum, requestedItem) => sum + Math.max(1, Number(requestedItem.quantity) || 1), 0);
+            if (menuItem.stock_quantity < requestedQuantity) {
               return NextResponse.json(
                 {
-                  error: `Món "${menuItem.name}" chỉ còn ${menuItem.stock_quantity} phần trong kho, không đủ để đặt ${qty} phần. Vui lòng giảm số lượng.`,
+                  error: `Món "${menuItem.name}" chỉ còn ${menuItem.stock_quantity} phần trong kho, không đủ để đặt ${requestedQuantity} phần. Vui lòng giảm số lượng.`,
                 },
                 { status: 400 }
               );
             }
           }
 
-          totalAmount += menuItem.price * qty;
+          const selectedSize = Array.isArray(menuItem.sizes)
+            ? menuItem.sizes.find((size) => size.name === item.size_name)
+            : null;
+          if (Array.isArray(menuItem.sizes) && menuItem.sizes.length > 0 && !selectedSize) {
+            return NextResponse.json({ error: `Vui lòng chọn size cho món "${menuItem.name}"` }, { status: 400 });
+          }
+          if (item.size_name && !selectedSize) {
+            return NextResponse.json({ error: `Size của món "${menuItem.name}" không hợp lệ` }, { status: 400 });
+          }
+          const itemPrice = selectedSize?.price ?? menuItem.price;
+          totalAmount += itemPrice * qty;
 
           orderItems.push({
             id: `item-${Date.now()}-${Math.random()}`,
             order_id: orderId,
             menu_item_id: menuItem.id,
             item_name: menuItem.name,
-            price: menuItem.price,
+            price: itemPrice,
             quantity: qty,
             note: item.note || '',
+            size_name: selectedSize?.name || null,
           });
         }
 
         // 2. Safe Atomic Stock Deduction
-        for (const item of items) {
-          const menuItem = itemMap.get(item.menu_item_id);
+        for (const menuItem of new Map(items.map((item) => [item.menu_item_id, itemMap.get(item.menu_item_id)])).values()) {
           if (menuItem && menuItem.stock_quantity !== null && menuItem.stock_quantity !== undefined) {
-            const qty = Math.max(1, Number(item.quantity) || 1);
+            const qty = items.filter((item) => item.menu_item_id === menuItem.id).reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
             const newStock = Math.max(0, menuItem.stock_quantity - qty);
             updateMockMenuItem(menuItem.id, {
               stock_quantity: newStock,
@@ -305,7 +327,8 @@ export async function GET(req: NextRequest) {
             item_name,
             price,
             quantity,
-            note
+            note,
+            size_name
           )
         `)
         .order('created_at', { ascending: false });

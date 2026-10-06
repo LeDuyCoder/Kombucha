@@ -136,6 +136,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                 <span className="font-bold text-stone-800 text-sm leading-snug block">
                   {item.item_name}
                 </span>
+                {item.size_name && (
+                  <span className="inline-flex rounded-md bg-rose-50 px-2 py-0.5 text-xs font-extrabold text-rose-700">
+                    Size {item.size_name}
+                  </span>
+                )}
                 {item.note && (
                   <div className="flex items-center gap-1.5 text-xs text-amber-700 font-medium">
                     <MessageSquare className="w-3 h-3 shrink-0" />

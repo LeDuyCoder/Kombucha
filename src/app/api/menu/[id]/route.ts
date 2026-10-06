@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, price, original_price, category_id, description, image_url, available, stock_quantity, sort_order } = body;
+    const { name, price, original_price, category_id, description, image_url, available, stock_quantity, sort_order, sizes } = body;
 
     const updates: Record<string, any> = {};
     if (name !== undefined) updates.name = String(name).trim();
@@ -36,6 +36,22 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       }
     }
     if (sort_order !== undefined) updates.sort_order = Number(sort_order);
+    if (sizes !== undefined) {
+      if (!Array.isArray(sizes)) return NextResponse.json({ error: 'Danh sách size không hợp lệ' }, { status: 400 });
+      updates.sizes = sizes.filter((size: { name?: unknown }) => typeof size?.name === 'string' && size.name.trim()).map((size: { name: string; price: number; original_price?: number | string | null }) => ({
+        name: String(size.name).trim(),
+        price: Number(size.price),
+        original_price: size.original_price === null || size.original_price === undefined || size.original_price === '' ? null : Number(size.original_price),
+      }));
+      if (updates.sizes.some((size: { name: string; price: number; original_price: number | null }) =>
+        !Number.isFinite(size.price) || size.price < 0 ||
+        (size.original_price !== null && (!Number.isFinite(size.original_price) || size.original_price <= size.price)))) {
+        return NextResponse.json({ error: 'Giá size hoặc giá gốc không hợp lệ' }, { status: 400 });
+      }
+      if (new Set(updates.sizes.map((size: { name: string }) => size.name.toLocaleLowerCase())).size !== updates.sizes.length) {
+        return NextResponse.json({ error: 'Tên các size phải khác nhau' }, { status: 400 });
+      }
+    }
 
     if (isSupabaseConfigured) {
       const { data, error } = await supabase

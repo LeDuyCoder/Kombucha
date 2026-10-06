@@ -11,8 +11,8 @@ interface CartDrawerProps {
   onOpen: () => void;
   cart: CartItem[];
   tableNumber: string | number | null;
-  onAddToCart: (item: CartItem['menuItem']) => void;
-  onRemoveFromCart: (item: CartItem['menuItem']) => void;
+  onAddToCart: (item: CartItem['menuItem'], size?: CartItem['size']) => void;
+  onRemoveFromCart: (item: CartItem['menuItem'], size?: CartItem['size']) => void;
   onClearCart: () => void;
   onSubmitOrder: (note: string) => Promise<void>;
   isSubmitting: boolean;
@@ -34,7 +34,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
-    (sum, item) => sum + item.menuItem.price * item.quantity,
+    (sum, item) => sum + (item.size?.price ?? item.menuItem.price) * item.quantity,
     0
   );
 
@@ -150,10 +150,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 cart.map((item) => {
                   const maxStock = item.menuItem.stock_quantity;
                   const isMax = typeof maxStock === 'number' && item.quantity >= maxStock;
+                  const originalPrice = item.size?.original_price ?? (item.size ? null : item.menuItem.original_price);
+                  const currentPrice = item.size?.price ?? item.menuItem.price;
 
                   return (
                     <div
-                      key={item.menuItem.id}
+                      key={`${item.menuItem.id}-${item.size?.name || 'default'}`}
                       className="flex items-center justify-between p-3 rounded-2xl bg-stone-50/70 border border-stone-200/70 hover:border-stone-300/80 transition-all shadow-2xs"
                     >
                       {/* Item Info */}
@@ -161,13 +163,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         <h4 className="font-bold text-stone-900 text-sm truncate leading-snug">
                           {item.menuItem.name}
                         </h4>
+                        {item.size && <p className="mt-0.5 text-xs font-semibold text-stone-500">Size {item.size.name}</p>}
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-xs text-rose-600 font-extrabold font-mono">
-                            {formatCurrency(item.menuItem.price)}
+                            {formatCurrency(currentPrice)}
                           </span>
-                          {item.menuItem.original_price && item.menuItem.original_price > item.menuItem.price && (
+                          {originalPrice && originalPrice > currentPrice && (
                             <span className="text-[10px] text-stone-400 line-through font-mono">
-                              {formatCurrency(item.menuItem.original_price)}
+                              {formatCurrency(originalPrice)}
                             </span>
                           )}
                           {typeof maxStock === 'number' && (
@@ -181,7 +184,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       {/* Compact Modern Stepper */}
                       <div className="flex items-center bg-white rounded-xl p-0.5 border border-stone-200 shadow-2xs">
                         <button
-                          onClick={() => onRemoveFromCart(item.menuItem)}
+                          onClick={() => onRemoveFromCart(item.menuItem, item.size)}
                           className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-600 hover:bg-stone-100 hover:text-stone-900 active:scale-90 transition-all cursor-pointer"
                           title="Giảm 1"
                         >
@@ -198,7 +201,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                               alert(`Món "${item.menuItem.name}" chỉ còn ${maxStock} phần!`);
                               return;
                             }
-                            onAddToCart(item.menuItem);
+                            onAddToCart(item.menuItem, item.size);
                           }}
                           disabled={isMax}
                           className={`w-7 h-7 rounded-lg flex items-center justify-center active:scale-90 transition-all cursor-pointer ${

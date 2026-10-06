@@ -34,7 +34,8 @@ export async function GET(req: NextRequest) {
             item_name,
             price,
             quantity,
-            note
+            note,
+            size_name
           )
         `)
         .gte('created_at', startOfDay)
@@ -80,13 +81,14 @@ export async function GET(req: NextRequest) {
       if (order.status === 'CANCELLED') continue;
       if (order.order_items) {
         for (const item of order.order_items) {
-          const existing = itemMap.get(item.item_name);
+          const breakdownName = item.size_name ? `${item.item_name} · Size ${item.size_name}` : item.item_name;
+          const existing = itemMap.get(breakdownName);
           if (existing) {
             existing.quantity += item.quantity;
             existing.total += item.price * item.quantity;
           } else {
-            itemMap.set(item.item_name, {
-              name: item.item_name,
+            itemMap.set(breakdownName, {
+              name: breakdownName,
               price: item.price,
               quantity: item.quantity,
               total: item.price * item.quantity,

@@ -21,6 +21,8 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
   onViewDetail,
 }) => {
   const [imageError, setImageError] = useState(false);
+  const hasSizes = Boolean(item.sizes?.length);
+  const lowestPricedSize = item.sizes?.reduce((lowest, size) => size.price < lowest.price ? size : lowest);
   const isOutOfStock = !item.available || (typeof item.stock_quantity === 'number' && item.stock_quantity === 0);
 
   return (
@@ -103,16 +105,20 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
         <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between gap-2">
           <div className="flex flex-col justify-center">
             <span className="font-black text-rose-600 text-sm sm:text-base tracking-tight font-mono leading-none">
-              {formatCurrency(item.price)}
+              {hasSizes
+                ? `Từ ${formatCurrency(lowestPricedSize!.price)}`
+                : formatCurrency(item.price)}
             </span>
-            {item.original_price && item.original_price > item.price && (
+            {hasSizes && lowestPricedSize?.original_price && lowestPricedSize.original_price > lowestPricedSize.price ? (
+              <span className="mt-1 text-[10px] font-mono leading-none text-stone-400 line-through">{formatCurrency(lowestPricedSize.original_price)}</span>
+            ) : !hasSizes && item.original_price && item.original_price > item.price ? (
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-[10px] text-stone-400 line-through font-mono leading-none">
                   {formatCurrency(item.original_price)}
                 </span>
                 <Tag className="w-2.5 h-2.5 text-rose-500 fill-rose-500/20" />
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Action Button */}
@@ -120,6 +126,11 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
             <span className="px-2 py-0.5 rounded-lg bg-stone-100 text-stone-400 text-[10px] font-bold">
               Hết món
             </span>
+          ) : hasSizes ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewDetail?.(item); }}
+              className="h-7 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1 shadow-xs"
+            >Chọn size</button>
           ) : quantityInCart > 0 ? (
             <div
               className="flex items-center bg-stone-100 rounded-xl p-0.5 border border-stone-200 shadow-2xs animate-in zoom-in-95 duration-150"

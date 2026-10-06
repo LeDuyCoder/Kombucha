@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { MenuCategory, MenuItem, CartItem, Order, Session, OrderStatus } from '@/types';
+import { MenuCategory, MenuItem, CartItem, MenuSize, Order, Session, OrderStatus } from '@/types';
 import { generateSessionToken } from '@/lib/utils';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { CustomerHeader } from '@/components/customer/Header';
@@ -255,32 +255,32 @@ export default function CustomerOrderPage() {
   );
 
   // Cart operations
-  const addToCart = useCallback((item: MenuItem) => {
+  const addToCart = useCallback((item: MenuItem, size?: MenuSize) => {
     setCart((prev) => {
-      const existing = prev.find((c) => c.menuItem.id === item.id);
-      const currentQty = existing ? existing.quantity : 0;
+      const existing = prev.find((c) => c.menuItem.id === item.id && c.size?.name === size?.name);
+      const currentQty = prev.filter((c) => c.menuItem.id === item.id).reduce((sum, c) => sum + c.quantity, 0);
       if (typeof item.stock_quantity === 'number' && currentQty >= item.stock_quantity) {
         alert(`Món "${item.name}" chỉ còn ${item.stock_quantity} phần!`);
         return prev;
       }
       if (existing) {
         return prev.map((c) =>
-          c.menuItem.id === item.id ? { ...c, quantity: c.quantity + 1 } : c
+          c.menuItem.id === item.id && c.size?.name === size?.name ? { ...c, quantity: c.quantity + 1 } : c
         );
       }
-      return [...prev, { menuItem: item, quantity: 1 }];
+      return [...prev, { menuItem: item, quantity: 1, size }];
     });
   }, []);
 
-  const removeFromCart = useCallback((item: MenuItem) => {
+  const removeFromCart = useCallback((item: MenuItem, size?: MenuSize) => {
     setCart((prev) => {
-      const existing = prev.find((c) => c.menuItem.id === item.id);
+      const existing = prev.find((c) => c.menuItem.id === item.id && c.size?.name === size?.name);
       if (!existing) return prev;
       if (existing.quantity <= 1) {
-        return prev.filter((c) => c.menuItem.id !== item.id);
+        return prev.filter((c) => !(c.menuItem.id === item.id && c.size?.name === size?.name));
       }
       return prev.map((c) =>
-        c.menuItem.id === item.id ? { ...c, quantity: c.quantity - 1 } : c
+        c.menuItem.id === item.id && c.size?.name === size?.name ? { ...c, quantity: c.quantity - 1 } : c
       );
     });
   }, []);
@@ -313,6 +313,7 @@ export default function CustomerOrderPage() {
             items: cart.map((item) => ({
               menu_item_id: item.menuItem.id,
               quantity: item.quantity,
+              size_name: item.size?.name,
             })),
           }),
         });
@@ -384,7 +385,7 @@ export default function CustomerOrderPage() {
   // Build quantity lookup
   const cartQuantityMap = useMemo(() => {
     const map = new Map<string, number>();
-    cart.forEach((item) => map.set(item.menuItem.id, item.quantity));
+    cart.forEach((item) => map.set(item.menuItem.id, (map.get(item.menuItem.id) || 0) + item.quantity));
     return map;
   }, [cart]);
 
@@ -588,6 +589,7 @@ export default function CustomerOrderPage() {
       {/* Item Detail Modal */}
       {selectedDetailItem && (
         <MenuItemDetailModal
+          key={selectedDetailItem.id}
           item={selectedDetailItem}
           isOpen={!!selectedDetailItem}
           onClose={() => setSelectedDetailItem(null)}

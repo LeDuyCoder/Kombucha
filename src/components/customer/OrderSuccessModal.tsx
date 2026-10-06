@@ -65,7 +65,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
             >
               <span className="text-stone-700">
                 <span className="font-bold text-emerald-700">{item.quantity}×</span>{' '}
-                {item.item_name}
+                {item.item_name}{item.size_name ? ` · Size ${item.size_name}` : ''}
               </span>
               <span className="text-stone-500 text-xs">
                 {formatCurrency(item.price * item.quantity)}

@@ -20,7 +20,8 @@ create table menu_items (
     image_url text,
     available boolean default true,
     stock_quantity integer,
-    sort_order integer default 0
+    sort_order integer default 0,
+    sizes jsonb not null default '[]'::jsonb
 );
 
 -- restaurant_tables
@@ -63,7 +64,8 @@ create table order_items (
     item_name text not null,
     price integer not null,
     quantity integer not null default 1 check (quantity > 0),
-    note text
+    note text,
+    size_name text
 );
 
 -- store_settings (Quản lý trạng thái Đóng / Mở cửa & Mã PIN Bếp)

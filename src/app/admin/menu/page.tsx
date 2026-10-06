@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MenuItem, MenuCategory } from '@/types';
+import { MenuItem, MenuCategory, MenuSize } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { 
   Coffee, 
@@ -79,7 +79,7 @@ const CustomCategorySelect = ({ value, onChange, categories, onCreateCategory }:
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1.5 w-full bg-white border border-stone-100 rounded-xl shadow-xl py-1.5 animate-in fade-in zoom-in-95 duration-200 max-h-60 overflow-y-auto">
+        <div className="absolute z-50 mt-1.5 w-full bg-white border border-stone-100 rounded-2xl shadow-xl py-1.5 animate-in fade-in zoom-in-95 duration-200 max-h-52 overflow-y-auto">
           {categories.map((c) => (
             <button
               key={c.id}
@@ -138,6 +138,34 @@ const CustomCategorySelect = ({ value, onChange, categories, onCreateCategory }:
   );
 };
 
+const SizeOptionsEditor = ({ sizes, onChange }: { sizes: MenuSize[]; onChange: (sizes: MenuSize[]) => void }) => (
+  <div className="p-3.5 rounded-2xl bg-violet-50/60 border border-violet-100 space-y-2.5">
+    <div className="flex items-center justify-between">
+      <div>
+        <span className="block text-xs font-bold text-violet-900">Size và giá riêng</span>
+        <span className="text-[11px] text-violet-700">Để trống nếu món không có size</span>
+      </div>
+      <button type="button" onClick={() => onChange([...sizes, { name: '', price: 0 }])} className="rounded-lg bg-violet-600 px-2.5 py-1.5 text-xs font-bold text-white">+ Thêm size</button>
+    </div>
+    {sizes.map((size, index) => (
+      <div key={index} className="rounded-xl border border-violet-100 bg-white p-2.5 space-y-2">
+        <div className="flex gap-2">
+          <input aria-label="Tên size" placeholder="Tên size (vd: M)" value={size.name} onChange={(event) => onChange(sizes.map((value, row) => row === index ? { ...value, name: event.target.value } : value))} className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm font-semibold" />
+          <button type="button" aria-label="Xóa size" onClick={() => onChange(sizes.filter((_, row) => row !== index))} className="rounded-lg px-2 text-rose-600 hover:bg-rose-50"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="min-w-0 text-[11px] font-bold text-stone-600">Giá bán
+            <input aria-label="Giá bán size" type="number" min="0" step="1000" placeholder="Giá bán" value={size.price} onChange={(event) => onChange(sizes.map((value, row) => row === index ? { ...value, price: Number(event.target.value) } : value))} className="mt-1 w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm font-semibold text-stone-900" />
+          </label>
+          <label className="min-w-0 text-[11px] font-bold text-stone-600">Giá gốc <span className="font-normal">(tùy chọn)</span>
+            <input aria-label="Giá gốc size" type="number" min="0" step="1000" placeholder="Không giảm giá" value={size.original_price ?? ''} onChange={(event) => onChange(sizes.map((value, row) => row === index ? { ...value, original_price: event.target.value === '' ? null : Number(event.target.value) } : value))} className="mt-1 w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm font-semibold text-stone-900" />
+          </label>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 export default function AdminMenuPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -149,6 +177,7 @@ export default function AdminMenuPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addName, setAddName] = useState('');
   const [addPrice, setAddPrice] = useState('');
+  const [addSizes, setAddSizes] = useState<MenuSize[]>([]);
   const [addCategoryId, setAddCategoryId] = useState('');
   const [addDescription, setAddDescription] = useState('');
   const [addImageUrl, setAddImageUrl] = useState('');
@@ -164,6 +193,7 @@ export default function AdminMenuPage() {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
+  const [editSizes, setEditSizes] = useState<MenuSize[]>([]);
   const [editCategoryId, setEditCategoryId] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editImageUrl, setEditImageUrl] = useState('');
@@ -320,7 +350,9 @@ export default function AdminMenuPage() {
       return;
     }
 
-    const priceNum = Number(addPrice);
+    const priceNum = addPrice.trim()
+      ? Number(addPrice)
+      : Math.min(...addSizes.filter((size) => size.name.trim()).map((size) => size.price));
     if (isNaN(priceNum) || priceNum < 0) {
       setAddError('Giá tiền không hợp lệ');
       return;
@@ -334,6 +366,7 @@ export default function AdminMenuPage() {
         body: JSON.stringify({
           name: addName.trim(),
           price: priceNum,
+          sizes: addSizes.filter((size) => size.name.trim()),
           category_id: addCategoryId || null,
           description: addDescription.trim() || null,
           image_url: addImageUrl.trim() || null,
@@ -348,6 +381,7 @@ export default function AdminMenuPage() {
         setIsAddOpen(false);
         setAddName('');
         setAddPrice('');
+        setAddSizes([]);
         setAddDescription('');
         setAddImageUrl('');
         setAddAvailable(true);
@@ -371,6 +405,7 @@ export default function AdminMenuPage() {
     setEditingItem(item);
     setEditName(item.name);
     setEditPrice(String(item.price));
+    setEditSizes(item.sizes || []);
     setEditCategoryId(item.category_id || (categories[0]?.id ?? ''));
     setEditDescription(item.description || '');
     setEditImageUrl(item.image_url || '');
@@ -400,7 +435,9 @@ export default function AdminMenuPage() {
       return;
     }
 
-    const priceNum = Number(editPrice);
+    const priceNum = editPrice.trim()
+      ? Number(editPrice)
+      : Math.min(...editSizes.filter((size) => size.name.trim()).map((size) => size.price));
     if (isNaN(priceNum) || priceNum < 0) {
       setEditError('Giá tiền không hợp lệ');
       return;
@@ -414,6 +451,7 @@ export default function AdminMenuPage() {
         body: JSON.stringify({
           name: editName.trim(),
           price: priceNum,
+          sizes: editSizes.filter((size) => size.name.trim()),
           category_id: editCategoryId || null,
           description: editDescription.trim() || null,
           image_url: editImageUrl.trim() || null,
@@ -774,8 +812,8 @@ export default function AdminMenuPage() {
 
         {/* ADD ITEM MODAL */}
         {isAddOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in">
-            <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full border border-stone-200 relative max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/45 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in">
+            <div className="bg-white rounded-[28px] p-5 sm:p-7 shadow-2xl max-w-lg w-full border border-white/80 relative max-h-[90dvh] overflow-y-auto">
               <button
                 onClick={() => setIsAddOpen(false)}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600"
@@ -814,16 +852,16 @@ export default function AdminMenuPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                      Giá tiền (VNĐ) <span className="text-rose-500">*</span>
+                    <label className="block min-h-10 text-xs font-bold text-stone-700 mb-1.5">
+                      Giá mặc định (nếu món không có size)
                     </label>
                     <input
                       type="number"
                       min="0"
                       step="1000"
-                      placeholder="vd: 35000"
+                      placeholder="Tự lấy giá thấp nhất nếu có size"
                       value={addPrice}
                       onChange={(e) => setAddPrice(e.target.value)}
                       className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 font-bold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono"
@@ -831,7 +869,7 @@ export default function AdminMenuPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                    <label className="block min-h-10 text-xs font-bold text-stone-700 mb-1.5">
                       Danh mục
                     </label>
                     <CustomCategorySelect
@@ -842,6 +880,8 @@ export default function AdminMenuPage() {
                     />
                   </div>
                 </div>
+
+                <SizeOptionsEditor sizes={addSizes} onChange={setAddSizes} />
 
                 {/* Discount Section Add Modal */}
                 <div className="p-3.5 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-3">
@@ -976,7 +1016,7 @@ export default function AdminMenuPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={addLoading || !addName.trim() || !addPrice}
+                    disabled={addLoading || !addName.trim() || (!addPrice && addSizes.every((size) => !size.name.trim()))}
                     className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-rose-600/20 transition-all flex items-center justify-center gap-1.5"
                   >
                     {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Thêm món</span>}
@@ -989,8 +1029,8 @@ export default function AdminMenuPage() {
 
         {/* EDIT ITEM MODAL */}
         {editingItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in">
-            <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full border border-stone-200 relative max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/45 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in">
+            <div className="bg-white rounded-[28px] p-5 sm:p-7 shadow-2xl max-w-lg w-full border border-white/80 relative max-h-[90dvh] overflow-y-auto">
               <button
                 onClick={() => setEditingItem(null)}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-600"
@@ -1027,10 +1067,10 @@ export default function AdminMenuPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                      Giá tiền (VNĐ) <span className="text-rose-500">*</span>
+                    <label className="block min-h-10 text-xs font-bold text-stone-700 mb-1.5">
+                      Giá mặc định (nếu món không có size)
                     </label>
                     <input
                       type="number"
@@ -1043,7 +1083,7 @@ export default function AdminMenuPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                    <label className="block min-h-10 text-xs font-bold text-stone-700 mb-1.5">
                       Danh mục
                     </label>
                     <CustomCategorySelect
@@ -1054,6 +1094,8 @@ export default function AdminMenuPage() {
                     />
                   </div>
                 </div>
+
+                <SizeOptionsEditor sizes={editSizes} onChange={setEditSizes} />
 
                 {/* Discount Section Edit Modal */}
                 <div className="p-3.5 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-3">
@@ -1186,7 +1228,7 @@ export default function AdminMenuPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={editLoading || !editName.trim() || !editPrice}
+                    disabled={editLoading || !editName.trim() || (!editPrice && editSizes.every((size) => !size.name.trim()))}
                     className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-xs shadow-rose-600/20 transition-all flex items-center justify-center gap-1.5"
                   >
                     {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Lưu thay đổi</span>}

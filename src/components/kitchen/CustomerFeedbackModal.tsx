@@ -331,7 +331,7 @@ export const CustomerFeedbackModal: React.FC<CustomerFeedbackModalProps> = ({
                           key={idx}
                           className="text-[11px] px-2 py-0.5 rounded-md bg-stone-200/60 text-stone-700 font-medium"
                         >
-                          {item.quantity}× {item.item_name}
+                          {item.quantity}× {item.item_name}{item.size_name ? ` · Size ${item.size_name}` : ''}
                         </span>
                       ))}
                     </div>
