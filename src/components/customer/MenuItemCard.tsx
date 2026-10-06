@@ -22,7 +22,9 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
   const hasSizes = Boolean(item.sizes?.length);
-  const lowestPricedSize = item.sizes?.reduce((lowest, size) => size.price < lowest.price ? size : lowest);
+  const lowestPricedSize = item.sizes?.length
+    ? item.sizes.reduce((lowest, size) => size.price < lowest.price ? size : lowest)
+    : undefined;
   const isOutOfStock = !item.available || (typeof item.stock_quantity === 'number' && item.stock_quantity === 0);
 
   return (
