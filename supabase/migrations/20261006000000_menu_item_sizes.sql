@@ -3,3 +3,5 @@ alter table menu_items
 
 alter table order_items
   add column if not exists size_name text;
+
+notify pgrst, 'reload schema';

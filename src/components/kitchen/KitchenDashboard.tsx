@@ -389,16 +389,20 @@ export const KitchenDashboard: React.FC = () => {
 
   // ------- Dynamic Room List -------
   const roomNumbers = useMemo(() => {
-    const set = new Set<string | number>();
+    const set = new Set<string>();
+    const addRoom = (value: string | number | null | undefined) => {
+      const roomNumber = String(value ?? '').trim();
+      if (roomNumber) set.add(roomNumber);
+    };
     
     // 1. Add all configured tables
     tables.forEach((t) => {
-      if (t.table_number) set.add(t.table_number);
+      addRoom(t.table_number);
     });
     
     // 2. Add any table that currently has orders (in case it was deleted but still has active orders)
     orders.forEach((o) => {
-      if (o.table_number) set.add(o.table_number);
+      addRoom(o.table_number);
     });
     
     // Sort
